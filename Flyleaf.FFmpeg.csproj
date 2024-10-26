@@ -1,0 +1,86 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	<DisableRuntimeMarshalling>false</DisableRuntimeMarshalling>
+	<Platforms>AnyCPU</Platforms>
+	<IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
+	<IsOSX Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
+	<IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
+	<Description>FFmpeg Bindings for C#/.NET (Extended)</Description>
+	<Version>7.1.0</Version>
+	<Authors>SuRGeoNix</Authors>
+	<Copyright>SuRGeoNix © 2024</Copyright>
+	<PackageTags>flyleaf;ffmpeg;bindings</PackageTags>
+	<Title>FFmpeg Bindings for C#/.NET (Extended)</Title>
+	<PackageReleaseNotes>Initial Release</PackageReleaseNotes>
+	<PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsWindows)'=='true'">
+	<DefineConstants>Windows</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(IsOSX)'=='true'">
+	<DefineConstants>OSX</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(IsLinux)'=='true'">
+	<DefineConstants>Linux</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <IsAotCompatible>True</IsAotCompatible>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <IsAotCompatible>True</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove=".gitattributes" />
+    <None Remove=".gitignore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Flyleaf.FFmpeg.ArrayUtils">
+      <Static>True</Static>
+    </Using>
+    <Using Include="Flyleaf.FFmpeg.Codec" />
+    <Using Include="Flyleaf.FFmpeg.Filter" />
+    <Using Include="Flyleaf.FFmpeg.Format" />
+    <Using Include="Flyleaf.FFmpeg.Format.Demux" />
+    <Using Include="Flyleaf.FFmpeg.Format.Mux" />
+    <Using Include="Flyleaf.FFmpeg.HWAccel" />
+    <Using Include="Flyleaf.FFmpeg.Spec" />
+    <Using Include="Flyleaf.FFmpeg.Spec.BSFSpec">
+      <Static>True</Static>
+    </Using>
+    <Using Include="Flyleaf.FFmpeg.Spec.CodecDescriptor">
+      <Static>True</Static>
+    </Using>
+    <Using Include="Flyleaf.FFmpeg.Spec.CodecParserSpec">
+      <Static>True</Static>
+    </Using>
+	<Using Include="Flyleaf.FFmpeg.Spec.CodecProfile">
+		<Static>True</Static>
+	</Using>
+    <Using Include="Flyleaf.FFmpeg.Spec.CodecSpec">
+      <Static>True</Static>
+    </Using>
+    <Using Include="Flyleaf.FFmpeg.Spec.FilterSpec">
+      <Static>True</Static>
+    </Using>
+    <Using Include="Flyleaf.FFmpeg.Spec.FormatSpec">
+      <Static>True</Static>
+    </Using>
+    <Using Include="Flyleaf.FFmpeg.Spec.HWDeviceSpec">
+      <Static>True</Static>
+    </Using>
+    <Using Include="Flyleaf.FFmpeg.Utils">
+      <Static>True</Static>
+    </Using>
+    <Using Include="System.Collections" />
+	<Using Include="System.Collections.ObjectModel" />
+  </ItemGroup>
+
+</Project>

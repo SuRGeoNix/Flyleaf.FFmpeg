@@ -8,6 +8,7 @@ public unsafe class FFmpegClassSpec
     public IEnumerable<FFmpegOption>    OptionsConst        => GetOptions().Where(x => x.Type == AVOptionType.Const);
     public IEnumerable<FFmpegOption>    Options             => GetOptions().Where(x => x.Type != AVOptionType.Const);
     public List<FFmpegClassSpec>        ChildsPossible      => GetPossibleChilds();
+    public AVClassStateFlags            StateFlagsOffset    => @class->state_flags_offset;
 
     List<FFmpegClassSpec> GetPossibleChilds()
     {

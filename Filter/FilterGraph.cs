@@ -3,15 +3,16 @@
 public unsafe class FilterGraph : IDisposable
 {
     public FFmpegClass          AVClass                 => FFmpegClass.Get(_ptr)!;
-    public FilterThreadFlags    ThreadFlags             { get => _ptr->thread_type;                    set => AVClass.Set("thread_type",       value); }
-    public int                  Threads                 { get => _ptr->nb_threads;                     set => AVClass.Set("threads",           value); }
-    public string?              ImageConvOpts           { get => GetString(_ptr->scale_sws_opts);      set => AVClass.Set("scale_sws_opts",    value); }   // Video only
-    public string?              SampleConvOpts          { get => GetString(_ptr->aresample_swr_opts);  set => AVClass.Set("aresample_swr_opts",value); }   // Audio only
+    public FilterThreadFlags    ThreadFlags             { get => _ptr->thread_type;                     set => AVClass.Set("thread_type",       value); }
+    public int                  Threads                 { get => _ptr->nb_threads;                      set => AVClass.Set("threads",           value); }
+    public string?              ImageConvOpts           { get => GetString(_ptr->scale_sws_opts);       set => AVClass.Set("scale_sws_opts",    value); }   // Video only
+    public string?              SampleConvOpts          { get => GetString(_ptr->aresample_swr_opts);   set => AVClass.Set("aresample_swr_opts",value); }   // Audio only
+    public uint                 MaxBufferedFrames       { get => _ptr->max_buffered_frames;             set => _ptr->max_buffered_frames = value;}
 
     public ReadOnlyCollection<FilterContext>
                                 Filters                 { get; }
-    List<FilterContext> filters = [];
-    Dictionary<nint, int> filterCtxPtrToIndex = []; // filters do not have indexes
+    List<FilterContext>     filters = [];
+    Dictionary<nint, int>   filterCtxPtrToIndex = []; // filters do not have indexes
 
     public bool                 Disposed                => _ptr == null;
     public readonly AVFilterGraph* _ptr;

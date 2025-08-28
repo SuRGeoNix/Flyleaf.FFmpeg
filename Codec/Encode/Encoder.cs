@@ -32,6 +32,9 @@ public unsafe abstract class Encoder : CodecContext
     public void SideDataRemove(AVFrameSideDataType type)
         => av_frame_side_data_remove(&_ptr->decoded_side_data, &_ptr->nb_decoded_side_data, type);
 
+    public void SideDataRemoveByProps(AVSideDataProps props)
+        => av_frame_side_data_remove_by_props(&_ptr->decoded_side_data, &_ptr->nb_decoded_side_data, props);
+
     public void SideDataFree()
         => av_frame_side_data_free(&_ptr->decoded_side_data, &_ptr->nb_decoded_side_data);
     #endregion

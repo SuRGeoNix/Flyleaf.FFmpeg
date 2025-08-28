@@ -23,8 +23,11 @@ public static class HWDeviceSpec
         [AVHWDeviceType.Mediacodec]     = AVPixelFormat.Mediacodec,
         [AVHWDeviceType.Vulkan]         = AVPixelFormat.Vulkan,
         [AVHWDeviceType.D3d12va]        = AVPixelFormat.D3d12,
+        [AVHWDeviceType.Amf]            = AVPixelFormat.AmfSurface,
+        [AVHWDeviceType.Ohcodec]        = AVPixelFormat.Ohcodec
     };
 
+    // Might not loaded so dynamic?*
     //static Dictionary<AVPixelFormat, AVHWDeviceType> _HWDeviceFromPixelFormats = new()
     //{
     //    [AVPixelFormat.Vdpau]           = AVHWDeviceType.Vdpau,

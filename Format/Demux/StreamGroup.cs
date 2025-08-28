@@ -10,7 +10,7 @@ public unsafe class StreamGroup
     public Dictionary<string, string>?  Metadata        => AVDictToDict(_ptr->metadata); //{ get; private set; } // once? (no eventflags here/update in parallel with streams*)
     public string?                      MetadataGet(string key, DictReadFlags flags = DictReadFlags.None)
                                                         { var val = av_dict_get(_ptr->metadata, key, null, flags); return val != null ? GetString(val->value) : null; }
-    public AVStreamGroup_params         Params          => _ptr->@params; // structs incomplete (tbr)
+    public AVStreamGroup_params         Params          => _ptr->@params; // TODO: class? ... AVStreamGroupTileGrid has packet side data
     public AVStreamGroupParamsType      Type            => _ptr->type;
 
     public ReadOnlyCollection<MediaStream>  Streams     = null!;

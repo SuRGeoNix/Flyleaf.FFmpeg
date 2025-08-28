@@ -7,11 +7,12 @@ public unsafe sealed partial class FilterSpec
     public string?                              Description     => GetString(_ptr->description);
     public FilterFlags                          Flags           => _ptr->flags;
 
-    public FilterFormatsState                   FormatsState    => _ptr->formats_state;
-    public AVSampleFormat                       SampleFormat    => FormatsState == FilterFormatsState.SingleSamplefmt   ? _ptr->formats.sample_fmt : AVSampleFormat.None;
-    public List<AVSampleFormat>                 SampleFormats   => FormatsState == FilterFormatsState.SamplefmtsList    ? GetSampleFormats(_ptr->formats.samples_list) : [];
-    public AVPixelFormat                        PixelFormat     => FormatsState == FilterFormatsState.SinglePixfmt      ? _ptr->formats.pix_fmt : AVPixelFormat.None;
-    public List<AVPixelFormat>                  PixelFormats    => FormatsState == FilterFormatsState.PixfmtList        ? GetPixelFormats(_ptr->formats.pixels_list) : [];
+    // Now they are private
+    //public FilterFormatsState                   FormatsState    => _ptr->formats_state;
+    //public AVSampleFormat                       SampleFormat    => FormatsState == FilterFormatsState.SingleSamplefmt   ? _ptr->formats.sample_fmt : AVSampleFormat.None;
+    //public List<AVSampleFormat>                 SampleFormats   => FormatsState == FilterFormatsState.SamplefmtsList    ? GetSampleFormats(_ptr->formats.samples_list) : [];
+    //public AVPixelFormat                        PixelFormat     => FormatsState == FilterFormatsState.SinglePixfmt      ? _ptr->formats.pix_fmt : AVPixelFormat.None;
+    //public List<AVPixelFormat>                  PixelFormats    => FormatsState == FilterFormatsState.PixfmtList        ? GetPixelFormats(_ptr->formats.pixels_list) : [];
 
     public ReadOnlyCollection<FilterPadInSpec>  InPads          { get; private set; } = null!;
     public ReadOnlyCollection<FilterPadOutSpec> OutPads         { get; private set; } = null!;
@@ -29,10 +30,12 @@ public unsafe sealed partial class FilterSpec
         InPads  = new(inpads);
         OutPads = new(outpads);
 
-        for(int i = 0; i < filter->nb_inputs; i++)
+        FFFilter* fffilter = ((FFFilter*)filter); // nb_ private why?
+
+        for(int i = 0; i < fffilter->nb_inputs; i++)
             inpads.Add(new(&filter->inputs[i], i));
 
-        for(int i = 0; i < filter->nb_outputs; i++)
+        for(int i = 0; i < fffilter->nb_outputs; i++)
             outpads.Add(new(&filter->outputs[i], i));
     }
 
@@ -45,7 +48,7 @@ public unsafe sealed partial class FilterSpec
             dump += $"{input.Name} {(input.Type == AVMediaType.Audio ? "A" : (input.Type == AVMediaType.Video ? "V" : "O"))}, ";
         dump += "]";
 
-        dump += $"\t\t {Name} ({FormatsState}) [out ";
+        //dump += $"\t\t {Name} ({FormatsState}) [out ";
 
         foreach(var input in outpads)
             dump += $"{input.Name} {(input.Type == AVMediaType.Audio ? "A" : (input.Type == AVMediaType.Video ? "V" : "O"))}, ";

@@ -10,6 +10,8 @@ public unsafe class BufferSink : FilterContext
 
     public FFmpegResult RecvFrame(AVFrame* frame, BufferSinkFlags flags = BufferSinkFlags.None)
         => new(av_buffersink_get_frame_flags(_ptr, frame, flags));
+
+    //TBR: av_buffersink_get_side_data actually access InPads[0].FilterLink side data
 }
 
 public unsafe class AudioBufferSink : BufferSink
@@ -25,7 +27,7 @@ public unsafe class AudioBufferSink : BufferSink
     public AudioBufferSink(FilterGraph graph, AudioBufferSinkParams param, string? name = null, bool initialize = true) : base(graph, "abuffersink", name)
     {
         SetParameters(param);
-
+        
         if (initialize && InitFilter() < 0)
             throw new Exception($"Filter abuffersink failed to initialize");
     }

@@ -8,29 +8,33 @@ public static class TimestampExtension
     public static long ToMcs(this long timestamp, AVRational timebase)
         => Rescale(timestamp, timebase, TimebaseMcs);
 
-    public static string McsToTime(this long micro, AVRational timebase)
-    {
-        if (micro == NoTs)
-            return "-";
+    public static long FromMcs(this long timestamp, AVRational timebase)
+        => Rescale(timestamp, TimebaseMcs, timebase);
 
-        return Rescale(micro, timebase, TimebaseMcs).McsToTime();
-    }
+    public static long FromMcs(this double timestamp, AVRational timebase)
+        => FromMcs((long)timestamp, timebase);
+
+    public static string DoubleToTime(this double d)
+        => Utils.DoubleToTime(d);
+
+    public static string DoubleToTimeMini(this double d)
+        => Utils.DoubleToTimeMini(d);
+
+    public static string TicksToTime(this long ticks)
+        => Utils.TicksToTime(ticks);
+
+    public static string TicksToTimeMini(this long ticks)
+        => Utils.TicksToTimeMini(ticks);
 
     public static string McsToTime(this long micro)
-    {
-        if (micro == NoTs)
-            return "-";
+        => Utils.McsToTime(micro);
 
-        var ts = TimeSpan.FromMicroseconds(micro);
-        string sign = micro < 0 ? "-" : "";
+    public static string McsToTimeMini(this long micro)
+        => Utils.McsToTimeMini(micro);
 
-        if (ts.Days > 0)
-            return sign + ts.ToString(@"d\-hh\:mm\:ss\.fff");
-        else if (ts.Hours > 0)
-            return sign + ts.ToString(@"hh\:mm\:ss\.fff");
-        else if (ts.Minutes > 0)
-            return sign + ts.ToString(@"mm\:ss\.fff");
-        else
-            return sign + ts.ToString(@"ss\.fff");
-    }
+    public static string TbToTime(this long ts, AVRational timebase)
+        => Utils.TbToTime(ts, timebase);
+
+    public static string TbToTimeMini(this long ts, AVRational timebase)
+        => Utils.TbToTimeMini(ts, timebase);
 }

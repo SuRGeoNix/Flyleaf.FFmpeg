@@ -51,7 +51,7 @@ public unsafe abstract class PacketBase
     public int Grow(int growBy)
         => av_grow_packet(_ptr, growBy);
 
-    public void MakeWriteable()
+    public int MakeWriteable()
         => av_packet_make_writable(_ptr);
 
     public int Ref(AVPacket* pkt)
@@ -82,8 +82,61 @@ public unsafe abstract class PacketBase
     public Packet Clone()
         => new(av_packet_clone(_ptr));
 
-    public void Dump(AVStream* stream, bool payload = false)
-        => av_pkt_dump_log2(null, 0, _ptr, payload ? 1 : 0, stream);
+    public void Dump(AVStream* stream, bool payload = false, LogLevel logLevel = LogLevel.Debug)
+        => av_pkt_dump_log2(null, logLevel, _ptr, payload ? 1 : 0, stream);
+
+    public string GetDump(AVRational timebase, char mediaType)
+        => $"[{mediaType}#{_ptr->stream_index:D2}] {GetDump(timebase)}";
+
+    public string GetDump(AVRational timebase)
+    {
+        string? sideData = null;
+
+        if (_ptr->side_data_elems > 0)
+        {
+            for (int i = 0; i < _ptr->side_data_elems - 1; i++)
+                sideData += av_packet_side_data_name(_ptr->side_data[i].type) + "|";
+
+            sideData += av_packet_side_data_name(_ptr->side_data[_ptr->side_data_elems - 1].type);
+        }
+
+        string? flags = _ptr->flags != 0 ? GetFlagsAsString(_ptr->flags, "|") : null;
+        
+        string dts, Dts, pts, Pts, dur, Dur;
+
+        if (_ptr->dts != NoTs)
+        {
+            dts = McsToTimeMini(av_rescale_q(_ptr->dts, timebase, TIME_BASE_Q)); //DoubleToTime(pkt->dts * av_q2d(Stream.Timebase));
+            Dts = _ptr->dts.ToString();
+        }
+        else
+        {
+            dts = Dts = "-";
+        }
+
+        if (_ptr->pts != NoTs)
+        {
+            pts = McsToTimeMini(av_rescale_q(_ptr->pts, timebase, TIME_BASE_Q)); // DoubleToTime(pkt->pts * av_q2d(Stream.Timebase));
+            Pts = _ptr->pts.ToString();
+        }
+        else
+        {
+            pts = Pts = "-";
+        }
+
+        if (_ptr->duration > 0)
+        {
+            dur = McsToTimeMini(av_rescale_q(_ptr->duration, timebase, TIME_BASE_Q)); //DoubleToTime(pkt->duration * av_q2d(Stream.Timebase));
+            Dur = _ptr->duration.ToString();
+        }
+        else
+        {
+            dur = Dur = "-";
+        }
+        
+        return $"dts: {dts + " (" + Dts + ")",-25}, pts: {pts + " (" + Pts + ")",-25}, dur: {dur + " (" + Dur + ")",-20}, pos: {_ptr->pos,-12}, size: {_ptr->size,-7}, flags: [{flags}]{(sideData != null ? ", side: [" + sideData + "]" : "")}";//{(mediaType == 'V' && _ptr->flags.HasFlag(PktFlags.Key) ? ", (VK)" : "")}";
+        //return $"dts: {dts + " (" + Dts + ")",-25}, pts: {pts + " (" + Pts + ")",-25}, dur: {dur + " (" + Dur + ")",-20}, pos: {_ptr->pos,-12}, size: {_ptr->size,-7}{(sideData != null ? ", side: [" + sideData + "]" : "")}{(flags != null ? ", flags: [" + flags + "]" : "")}";//{(mediaType == 'V' && _ptr->flags.HasFlag(PktFlags.Key) ? ", (VK)" : "")}";
+    }
 
     #region SideData
     public AVPacketSideData*    SideData        => _ptr->side_data;

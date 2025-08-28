@@ -96,7 +96,7 @@ public unsafe class VideoDecoder : AVDecoder
     public void PrepareFrom(VideoStream stream)
     {
         CodecTag            = stream.CodecTag; // Note: this is not necessary related to codecId / codec
-        PacketTimebase      = stream.Timebase;
+        Timebase            = stream.Timebase;
 
         BitRate             = stream.BitRate;
         BitsPerCodedSample  = stream.BitsPerCodedSample;
@@ -117,8 +117,6 @@ public unsafe class VideoDecoder : AVDecoder
 
         // TBR: Based on Docs those should be read-only
         //SAR = stream.SAR;
-        //Profile = stream.Profile;
-        //Level = stream.Level;
         //FrameRate = stream.FrameRate;
         //ChromaLocation = stream.ChromaLocation;
         //ColorPrimaries = stream.ColorPrimaries;

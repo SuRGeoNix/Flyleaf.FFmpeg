@@ -14,6 +14,10 @@ public unsafe static partial class Utils
      *      trade-off initial delay vs fast loading while running
      */
 
+    public static bool FFmpegLoaded { get; private set; }
+
+    internal static object ffmpegLocker = new();
+
     public static void LoadLibraries(string path, LoadProfile profile = LoadProfile.All, bool validateVersion = true, bool fillTables = true)
     {
         Raw.LoadLibraries(path, profile, validateVersion);
@@ -30,8 +34,22 @@ public unsafe static partial class Utils
             if (profile != LoadProfile.Main)
                 FillFilterSpecs();
 
+            // Protocols
             // PixFmtDescriptors, Parsers ?
         }
+
+        lock (ffmpegLocker)
+        {
+            FFmpegLoaded = true;
+            if (Log.LogLoaded)
+                Log.SetAVLog();
+            else
+                Log.Start();
+        }
+
+        // TBR: Print versions / diffs between bindings and ffmpeg libs?
+        //log = new("FFmpeg Loader");
+        //log.Debug($"avformat {ToFourCC(avformat_version())} | {LIBAVFORMAT_VERSION_MAJOR}.{LIBAVFORMAT_VERSION_MINOR}.{LIBAVFORMAT_VERSION_MICRO}");
     }
 
     public static string[]? GetStringsFromComma(byte* csStr)
@@ -55,6 +73,33 @@ public unsafe static partial class Utils
         }
     }
 
+    public static List<T> GetFlagsAsList<T>(T value) where T : Enum
+    {
+        List<T> values = [];
+
+        var enumValues = Enum.GetValuesAsUnderlyingType(typeof(T));
+        //var enumValues = Enum.GetValues(typeof(T)); // breaks AOT?
+
+        foreach(T flag in enumValues)
+            if (value.HasFlag(flag) && flag.ToString() != "None")
+                values.Add(flag);
+
+        return values;
+    }
+    public static string? GetFlagsAsString<T>(T value, string separator = " | ") where T : Enum
+    {
+        string? ret = null;
+        List<T> values = GetFlagsAsList(value);
+
+        if (values.Count == 0)
+            return ret;
+
+        for (int i = 0; i < values.Count - 1; i++)
+            ret += values[i] + separator; 
+
+        return ret + values[^1];
+    }
+
     public static int GetBitsPerPixel(AVPixFmtDescriptor* pixDesc)
         => av_get_bits_per_pixel(pixDesc);
 
@@ -66,15 +111,6 @@ public unsafe static partial class Utils
 
     public static AVSampleFormat GetSampleFormat(string name)
         => av_get_sample_fmt(name);
-
-    public static int Compare(long ts1, AVRational tb1, long ts2, AVRational tb2)
-        => av_compare_ts(ts1, tb1, ts2, tb2);
-
-    public static long Rescale(long ts1, long tb1, long tb2, AVRounding rounding = AVRounding.NearInf)
-        => av_rescale_rnd(ts1, tb1, tb2, rounding);
-
-    public static long Rescale(long ts1, AVRational tb1, AVRational tb2, AVRounding rounding = AVRounding.NearInf)
-        => av_rescale_q_rnd(ts1, tb1, tb2, rounding);
 
     public static void AVStrDupReplace(string? str, byte** strPtr)
     {
@@ -104,12 +140,4 @@ public unsafe static partial class Utils
 
     public static string ToFourCC(int version)
         => string.Join(".", BitConverter.GetBytes(BinaryPrimitives.ReverseEndianness(version)).SkipWhile(v => v == 0));
-
-    internal static void AddToDicList<TKey, TValue>(Dictionary<TKey, List<TValue>> dic, TKey key, TValue value) where TKey : notnull
-    {
-        if (dic.TryGetValue(key, out var spec))
-            spec.Add(value);
-        else
-            dic.Add(key, [value]);
-    }
 }

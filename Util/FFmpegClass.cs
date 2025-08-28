@@ -7,6 +7,7 @@ public unsafe class FFmpegClass : FFmpegClassSpec
      * 2) Readonly does not necessary mean Export too (might have different property for exports?)
      * 3) We consider Const as 'child' of unit
      * 4) We consider unspecified (none) opt flags for ED AVS as for all
+     * 5) Get Options/Values recursive as a single IEnumerable/Dictionary?
      */
 
     public AVClassCategory                  Category            => GetCategory();
@@ -26,10 +27,10 @@ public unsafe class FFmpegClass : FFmpegClassSpec
     public IEnumerable<FFmpegOption>        OptionsRW           => Options.Where(x => !x.Flags.HasFlag(OptFlags.Readonly));
     public IEnumerable<FFmpegOption>        OptionsRO           => Options.Where(x =>  x.Flags.HasFlag(OptFlags.Readonly));
 
-    public Dictionary<string, string>       ValuesAll           => OptionsAll.  ToDictionary(k => k.Name, v => GetData(v.Name).result!);
-    public Dictionary<string, string>       Values              => Options.     ToDictionary(k => k.Name, v => GetData(v.Name).result!);
-    public Dictionary<string, string>       ValuesRW            => OptionsRW.   ToDictionary(k => k.Name, v => GetData(v.Name).result!);
-    public Dictionary<string, string>       ValuesRO            => OptionsRO.   ToDictionary(k => k.Name, v => GetData(v.Name).result!);
+    public Dictionary<string, string>       ValuesAll           => OptionsAll.  ToDictionary(k => k.Name, v => GetString(v.Name).result!);
+    public Dictionary<string, string>       Values              => Options.     ToDictionary(k => k.Name, v => GetString(v.Name).result!);
+    public Dictionary<string, string>       ValuesRW            => OptionsRW.   ToDictionary(k => k.Name, v => GetString(v.Name).result!);
+    public Dictionary<string, string>       ValuesRO            => OptionsRO.   ToDictionary(k => k.Name, v => GetString(v.Name).result!);
     
     OptFlags optFlags = OptFlags.None;
     OptFlags de;
@@ -178,11 +179,11 @@ public unsafe class FFmpegClass : FFmpegClassSpec
         return ret;
     }
 
-    public (FFmpegResult success, string?  result) GetData(string name, OptSearchFlags searchFlags = OptSearchFlags.Children)
+    public (FFmpegResult success, string? result) GetString(string name, OptSearchFlags searchFlags = OptSearchFlags.Children)
     {
         byte* outVal;
         FFmpegResult ret = new(av_opt_get(ctx, name, searchFlags, &outVal));
-        return (ret, GetString(outVal));
+        return (ret, Utils.GetString(outVal));
     }
 
     public (FFmpegResult success, long result) GetLong(string name, OptSearchFlags searchFlags = OptSearchFlags.Children)

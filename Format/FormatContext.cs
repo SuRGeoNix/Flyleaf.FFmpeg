@@ -17,7 +17,7 @@ public unsafe abstract class FormatContext : IDisposable
     
     public bool                             Disposed        => _ptr == null;
     public readonly AVFormatContext* _ptr;
-    protected static System.Reflection.FieldInfo ptrField = typeof(FormatContext).GetField("_ptr")!;
+    protected readonly static System.Reflection.FieldInfo ptrField = typeof(FormatContext).GetField("_ptr")!;
 
     public static implicit operator AVFormatContext*(FormatContext ctx)
         => ctx._ptr;

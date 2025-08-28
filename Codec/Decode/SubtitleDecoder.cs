@@ -51,10 +51,10 @@ public unsafe class SubtitleDecoder : Decoder
 
     public void PrepareFrom(SubtitleStream stream)
     {
-        PacketTimebase  = stream.Timebase;
-        CodecTag        = stream.CodecTag; // Note: this is not necessary related to codecId / codec
-        Width           = stream.Width;
-        Height          = stream.Height;
+        Timebase    = stream.Timebase;
+        CodecTag    = stream.CodecTag; // Note: this is not necessary related to codecId / codec
+        Width       = stream.Width;
+        Height      = stream.Height;
 
         stream.ExtraDataCopyTo(&_ptr->extradata, &_ptr->extradata_size);
         stream.SideDataCopyTo(&_ptr->coded_side_data, &_ptr->nb_coded_side_data);

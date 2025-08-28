@@ -7,12 +7,11 @@ public unsafe sealed partial class FilterSpec
     public string?                              Description     => GetString(_ptr->description);
     public FilterFlags                          Flags           => _ptr->flags;
 
-    // TODO single property?*
-    public FilterFormatsState                   PadsType        => (FilterFormatsState)_ptr->formats_state;
-    public AVSampleFormat                       SampleFormat    => PadsType == FilterFormatsState.Audio ? _ptr->formats.sample_fmt : AVSampleFormat.None;
-    public List<AVSampleFormat>                 SampleFormats   => PadsType == FilterFormatsState.AudioMulti ? GetSampleFormats(_ptr->formats.samples_list) : [];
-    public AVPixelFormat                        PixelFormat     => PadsType == FilterFormatsState.Video ? _ptr->formats.pix_fmt : AVPixelFormat.None;
-    public List<AVPixelFormat>                  PixelFormats    => PadsType == FilterFormatsState.VideoMulti ? GetPixelFormats(_ptr->formats.pixels_list) : [];
+    public FilterFormatsState                   FormatsState    => _ptr->formats_state;
+    public AVSampleFormat                       SampleFormat    => FormatsState == FilterFormatsState.SingleSamplefmt   ? _ptr->formats.sample_fmt : AVSampleFormat.None;
+    public List<AVSampleFormat>                 SampleFormats   => FormatsState == FilterFormatsState.SamplefmtsList    ? GetSampleFormats(_ptr->formats.samples_list) : [];
+    public AVPixelFormat                        PixelFormat     => FormatsState == FilterFormatsState.SinglePixfmt      ? _ptr->formats.pix_fmt : AVPixelFormat.None;
+    public List<AVPixelFormat>                  PixelFormats    => FormatsState == FilterFormatsState.PixfmtList        ? GetPixelFormats(_ptr->formats.pixels_list) : [];
 
     public ReadOnlyCollection<FilterPadInSpec>  InPads          { get; private set; } = null!;
     public ReadOnlyCollection<FilterPadOutSpec> OutPads         { get; private set; } = null!;
@@ -31,11 +30,10 @@ public unsafe sealed partial class FilterSpec
         OutPads = new(outpads);
 
         for(int i = 0; i < filter->nb_inputs; i++)
-            inpads.Add(new(filter->inputs, i));
+            inpads.Add(new(&filter->inputs[i], i));
 
         for(int i = 0; i < filter->nb_outputs; i++)
-            outpads.Add(new(filter->outputs, i));
-
+            outpads.Add(new(&filter->outputs[i], i));
     }
 
     public string TestDump()
@@ -47,7 +45,7 @@ public unsafe sealed partial class FilterSpec
             dump += $"{input.Name} {(input.Type == AVMediaType.Audio ? "A" : (input.Type == AVMediaType.Video ? "V" : "O"))}, ";
         dump += "]";
 
-        dump += $"\t\t {Name} ({PadsType}) [out ";
+        dump += $"\t\t {Name} ({FormatsState}) [out ";
 
         foreach(var input in outpads)
             dump += $"{input.Name} {(input.Type == AVMediaType.Audio ? "A" : (input.Type == AVMediaType.Video ? "V" : "O"))}, ";
@@ -58,15 +56,15 @@ public unsafe sealed partial class FilterSpec
 
     public unsafe class FilterPadSpec
     {
-        public string?          Name        => avfilter_pad_get_name(_ptr, index);
-        public AVMediaType      Type        => avfilter_pad_get_type(_ptr, index);
+        public string?          Name        => GetString(_ptr->name);   // avfilter_pad_get_name(_ptr, index);
+        public AVMediaType      Type        => _ptr->type;              // avfilter_pad_get_type(_ptr, index);
+        public FilterPadFlags   Flags       => _ptr->flags;
         public int              Index       => index;
+        int index;
 
         public readonly AVFilterPad* _ptr;
         public static implicit operator AVFilterPad*(FilterPadSpec pad)
             => pad._ptr;
-
-        int index;
 
         internal FilterPadSpec(AVFilterPad* pad, int index)
         {
@@ -84,15 +82,4 @@ public unsafe sealed partial class FilterSpec
     {
         internal FilterPadInSpec(AVFilterPad* pad, int index) : base(pad, index) { }
     }
-}
-
-// Warning this is internal!
-public enum FilterFormatsState
-{
-    Passthrough,
-    QueryFunc,
-    VideoMulti,
-    AudioMulti,
-    Video,
-    Audio
 }

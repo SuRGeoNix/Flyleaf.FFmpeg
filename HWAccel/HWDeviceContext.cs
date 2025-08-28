@@ -50,12 +50,11 @@ public unsafe abstract class HWDeviceContextBase
     protected HWDeviceContextBase(AVHWDeviceType type, string? adapterId, Dictionary<string, string>? opts = null) // (decoding only?) how to separate alloc with create in constructor?
     {
         var avopts  = AVDictFromDict(opts);
-        int ret = av_hwdevice_ctx_create(ref _ptr, type, adapterId, avopts, 0);
+        var ret     = new FFmpegResult(av_hwdevice_ctx_create(ref _ptr, type, adapterId, avopts, 0));
         if (avopts != null)
             AVDictFree(&avopts);
 
-        if (ret < 0)
-            throw new Exception("HWDeviceContext creation failed");
+        ret.ThrowOnFailure();
 
         _ctx    = (AVHWDeviceContext*)_ptr->data;
         _hwctx  = _ctx->hwctx;
@@ -64,12 +63,11 @@ public unsafe abstract class HWDeviceContextBase
     public HWDeviceContextBase(HWDeviceContext sourceDevice, AVHWDeviceType type, Dictionary<string, string>? opts = null) // store srcDevice?
     {
         var avopts  = AVDictFromDict(opts);
-        int ret     = av_hwdevice_ctx_create_derived_opts(ref _ptr, type, sourceDevice._ptr, avopts, 0);
+        var ret     = new FFmpegResult(av_hwdevice_ctx_create_derived_opts(ref _ptr, type, sourceDevice._ptr, avopts, 0));
         if (avopts != null)
             AVDictFree(&avopts);
         
-        if (ret < 0)
-            throw new Exception("HWDeviceContext creation failed");
+        ret.ThrowOnFailure();
 
         _ctx    = (AVHWDeviceContext*)_ptr->data;
         _hwctx  = _ctx->hwctx;

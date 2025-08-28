@@ -25,7 +25,7 @@ public unsafe class Muxer : FormatContext
     // Should be RO?*
     public string?          Url                     { get => GetString(_ptr->url);           set => AVStrDupReplace(value, &_ptr->url); }
     public IOContext?       IOContext               { get; }
-    public MuxerSpec        FormatSpec              => (MuxerSpec)FormatSpecByPtr[(nint)_ptr->oformat]; // WARN: Never set ->i/oformat directly from AV* as it is actually an FF* and requires to allocate also priv_data and set default options (ffmpeg examples do it anyways?*)
+    public MuxerSpec        MuxerSpec               => (MuxerSpec)FormatSpecByPtr[(nint)_ptr->oformat]; // WARN: Never set ->i/oformat directly from AV* as it is actually an FF* and requires to allocate also priv_data and set default options (ffmpeg examples do it anyways?*)
     public long             StartTimeMcs            => _ptr->start_time;
     public long             StartRealTime           { get => _ptr->start_time_realtime;      set => _ptr->start_time_realtime = value; }
     public long             Duration                { get => _ptr->duration;                 set => _ptr->duration = value; }
@@ -49,7 +49,7 @@ public unsafe class Muxer : FormatContext
 
         if (ioContext == null)
         {
-            if (!FormatSpec.Flags.HasFlag(MuxerSpecFlags.NoFile))
+            if (!MuxerSpec.Flags.HasFlag(MuxerSpecFlags.NoFile))
             {
                 ArgumentNullException.ThrowIfNull(fileName);
 

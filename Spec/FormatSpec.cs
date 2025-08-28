@@ -62,7 +62,7 @@ public unsafe sealed class DemuxerSpec : FormatSpec
     public FFmpegClassSpec? AVClass             => FFmpegClassSpec.Get(_ptr->priv_class);
     public string           Name                { get; }
     public string?          LongName            { get; }
-    public string[]?        Extenstions         { get; }
+    public string[]?        Extensions          { get; }
     public string[]?        MimeType            { get; }
     public DemuxerSpecFlags Flags               { get; }
     public List<AVCodecTag> CodecTags           { get; } // + AVSType, FourCC
@@ -71,10 +71,10 @@ public unsafe sealed class DemuxerSpec : FormatSpec
 
     public DemuxerSpec(AVInputFormat* fmt)
     {
-        _ptr   = fmt;
+        _ptr = fmt;
         Name            = GetString(fmt->name)!;
         LongName        = GetString(fmt->long_name);
-        Extenstions     = GetStringsFromComma(fmt->extensions);
+        Extensions      = GetStringsFromComma(fmt->extensions);
         MimeType        = GetStringsFromComma(fmt->mime_type);
         Flags           = (DemuxerSpecFlags)fmt->flags;
         CodecTags       = GetTags(fmt->codec_tag);
@@ -83,6 +83,8 @@ public unsafe sealed class DemuxerSpec : FormatSpec
     }
 
     public static implicit operator AVInputFormat*(DemuxerSpec spec) => spec._ptr;
+
+    // TODO: Probe demuxers from FFInputFormat->read_probe directly* (maybe for NoFile only? before open|no data*)
 
     public static Tuple<DemuxerSpec?, int> FindDemuxer(IOContext ctx, string? url = null, uint offset = 0, uint maxProbeSize = 0)
     {
@@ -95,7 +97,7 @@ public unsafe sealed class DemuxerSpec : FormatSpec
         return new(fmt == null ? null : (DemuxerSpec)FormatSpecByPtr[(nint)fmt], probeScore);
     }
 
-    public static Tuple<DemuxerSpec?, int> FindDemuxer(string? filename = null, string? mimeType = null) // TODO: buf data?
+    public static Tuple<DemuxerSpec?, int> FindDemuxer(string? filename = null, string? mimeType = null, int is_opened = 1) // TODO: buf data?
     {
         AVProbeData pd = new()
         {
@@ -104,7 +106,7 @@ public unsafe sealed class DemuxerSpec : FormatSpec
         };
 
         int score;
-        AVInputFormat* fmt = av_probe_input_format3(&pd, 1, &score);
+        AVInputFormat* fmt = av_probe_input_format3(&pd, is_opened, &score);
 
         // ffmpeg will not free them?
         av_free(pd.filename);

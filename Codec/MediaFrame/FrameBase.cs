@@ -92,6 +92,58 @@ public unsafe abstract class FrameBase
     public void UnRef()
         => av_frame_unref(_ptr);
 
+    public string GetDump(AVRational timebase, int streamIndex, char mediaType)
+        => $"[{mediaType}#{streamIndex:D2}] {GetDump(timebase)}";
+
+    public string GetDump(AVRational timebase)
+    {
+        string? sideData = null;
+
+        if (_ptr->nb_side_data > 0)
+        {
+            for (int i = 0; i < _ptr->nb_side_data - 1; i++)
+                sideData += _ptr->side_data[i]->type + "|";
+
+            sideData += _ptr->side_data[_ptr->nb_side_data - 1]->type;
+        }
+
+        string? flags = _ptr->flags != 0 ? GetFlagsAsString(_ptr->flags, "|") : null;
+        
+        string dts, Dts, pts, Pts, dur, Dur;
+
+        if (_ptr->pkt_dts != NoTs)
+        {
+            dts = McsToTimeMini(av_rescale_q(_ptr->pkt_dts, timebase, TIME_BASE_Q)); //DoubleToTime(pkt->dts * av_q2d(Stream.Timebase));
+            Dts = _ptr->pkt_dts.ToString();
+        }
+        else
+        {
+            dts = Dts = "-";
+        }
+
+        if (_ptr->pts != NoTs)
+        {
+            pts = McsToTimeMini(av_rescale_q(_ptr->pts, timebase, TIME_BASE_Q)); // DoubleToTime(pkt->pts * av_q2d(Stream.Timebase));
+            Pts = _ptr->pts.ToString();
+        }
+        else
+        {
+            pts = Pts = "-";
+        }
+
+        if (_ptr->duration > 0)
+        {
+            dur = McsToTimeMini(av_rescale_q(_ptr->duration, timebase, TIME_BASE_Q)); //DoubleToTime(pkt->duration * av_q2d(Stream.Timebase));
+            Dur = _ptr->duration.ToString();
+        }
+        else
+        {
+            dur = Dur = "-";
+        }
+        
+        return $"dts: {dts + " (" + Dts + ")",-25}, pts: {pts + " (" + Pts + ")",-25}, dur: {dur + " (" + Dur + ")",-20}, picType: {_ptr->pict_type, -8}{(flags != null ? ", flags: [" + flags + "]" : "")}{(sideData != null ? ", side: [" + sideData + "]" : "")}";
+    }
+
     #region Frame Side Data
     public AVFrameSideData**    SideData        => _ptr->side_data;
     public int                  SideDataCount   => _ptr->nb_side_data;

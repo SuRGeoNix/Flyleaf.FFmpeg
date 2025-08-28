@@ -21,6 +21,8 @@ public unsafe class SubtitleFrame : IDisposable
     public static implicit operator AVSubtitle*(SubtitleFrame frame)
         => frame._ptr;
 
+    // TODO: copy fftools/ffmpeg_dec.c (copy_av_subtitle)
+
     //public void Reset()
     //    => avsubtitle_free(_ptr);
 

@@ -11,12 +11,24 @@
 	<IsOSX Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
 	<IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
 	<Description>FFmpeg Bindings for C#/.NET (Extended)</Description>
-	<Version>7.1.0</Version>
+	<Version>7.1.1</Version>
 	<Authors>SuRGeoNix</Authors>
-	<Copyright>SuRGeoNix © 2024</Copyright>
+	<Copyright>SuRGeoNix © 2025</Copyright>
 	<PackageTags>flyleaf;ffmpeg;bindings</PackageTags>
 	<Title>FFmpeg Bindings for C#/.NET (Extended)</Title>
-	<PackageReleaseNotes>Initial Release</PackageReleaseNotes>
+	<PackageReleaseNotes>
+		- Decode: Renames PacketTimebase to Timebase
+		- MediaFrame: Adds Ref and Dumps
+		- Extensions: Adds TimestampExtension
+		- Filter: Adds BufferSource Drain
+		- Muxer: Renames FormatSpec to MuxerSpec
+		- Demuxer: Renames FormatSpec to DemuxerSpec
+		- Demuxer: Adds Dumps
+		- MediaStream: Adds IndexEntries and Dumps
+		- IOContext: Adds Protocol, MimeType and Dumps
+		- Packet: Adds Dumps
+		- Logging: Adds Logging
+	</PackageReleaseNotes>
 	<PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
   </PropertyGroup>
 
@@ -31,9 +43,13 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <IsAotCompatible>True</IsAotCompatible>
+    <NoWarn>1701;1702;IDE0130</NoWarn>
+    <WarningLevel>8</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <IsAotCompatible>True</IsAotCompatible>
+    <NoWarn>1701;1702;IDE0130</NoWarn>
+    <WarningLevel>8</WarningLevel>
   </PropertyGroup>
 
   <ItemGroup>
@@ -46,11 +62,13 @@
       <Static>True</Static>
     </Using>
     <Using Include="Flyleaf.FFmpeg.Codec" />
+    <Using Include="Flyleaf.FFmpeg.Extensions" />
     <Using Include="Flyleaf.FFmpeg.Filter" />
     <Using Include="Flyleaf.FFmpeg.Format" />
     <Using Include="Flyleaf.FFmpeg.Format.Demux" />
     <Using Include="Flyleaf.FFmpeg.Format.Mux" />
     <Using Include="Flyleaf.FFmpeg.HWAccel" />
+    <Using Include="Flyleaf.FFmpeg.Logging" />
     <Using Include="Flyleaf.FFmpeg.Spec" />
     <Using Include="Flyleaf.FFmpeg.Spec.BSFSpec">
       <Static>True</Static>

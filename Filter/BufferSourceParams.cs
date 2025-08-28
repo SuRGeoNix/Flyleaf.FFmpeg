@@ -52,7 +52,7 @@ public unsafe class AudioBufferSourceParams : BufferSourceParams
 
     public void PrepareFrom(AudioDecoder decoder)
     {
-        Timebase        = decoder.PacketTimebase;
+        Timebase        = decoder.Timebase;
 
         SampleFormat    = decoder.SampleFormat;
         SampleRate      = decoder.SampleRate;
@@ -77,7 +77,7 @@ public unsafe class VideoBufferSourceParams : BufferSourceParams
 
     public void PrepareFrom(VideoDecoder decoder)
     {
-        Timebase            = decoder.PacketTimebase;
+        Timebase            = decoder.Timebase;
 
         Width               = decoder.Width;
         Height              = decoder.Height;

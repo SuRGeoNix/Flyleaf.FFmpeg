@@ -3,7 +3,7 @@
 public unsafe abstract class Decoder : CodecContext
 {
     // RW D VAS (TBR: maybe no S? fixed to 1/1000 ms)
-    public AVRational           PacketTimebase      { get => _ptr->pkt_timebase;                set => _ptr->pkt_timebase = value; } // timebase for decoding is unused might use timebase prop name for this?
+    public AVRational           Timebase                { get => _ptr->pkt_timebase;                set => _ptr->pkt_timebase = value; } // timebase for decoding is unused might (Use this as timebase to avoid confusion)
 
     #region SideData
     public AVPacketSideData*    PacketSideData          => _ptr->coded_side_data;

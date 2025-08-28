@@ -47,6 +47,13 @@ public unsafe abstract class VideoFrameBase : FrameBase
     public FFmpegResult Ref(VideoFrameBase frame)
         => base.Ref(frame);
 
+    public VideoFrame Ref()
+    {
+        VideoFrame frame = new();
+        Ref(frame);
+        return frame;
+    }
+
     public void MoveRef(VideoFrameBase frame)
         => base.MoveRef(frame);
 

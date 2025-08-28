@@ -64,7 +64,7 @@ public unsafe class AudioDecoder : AVDecoder
     public void PrepareFrom(AudioStream stream)
     {
         CodecTag            = stream.CodecTag; // Note: this is not necessary related to codecId / codec
-        PacketTimebase      = stream.Timebase;
+        Timebase            = stream.Timebase;
 
         CodecProfile        = stream.CodecProfile;
         Level               = stream.Level;

@@ -194,7 +194,8 @@ public unsafe class FilterGraph : IDisposable
         filters.Add(filter);
     }
 
-    // CRIT: AVFILTERPAD_SIZE = sizeof(AVFilterPad)
+    // TBR: required to reconstruct the graph after config
+    public static int AVFILTERPAD_SIZE = SizeOf<AVFilterPad>();
     FilterPadIn? FindInPadFromPtrs(AVFilterContext* ctx, AVFilterPad* pad)
     {
         if (!filterCtxPtrToIndex.TryGetValue((nint)ctx, out int filterIndex))

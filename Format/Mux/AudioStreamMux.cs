@@ -15,7 +15,7 @@ public unsafe class AudioStreamMux : MediaStreamMux
     public AVSampleFormat       SampleFormat        { get => (AVSampleFormat)_codecpar->format; set => _codecpar->format = (int)value; }
     public int                  SampleRate          { get => _codecpar->sample_rate;            set => _codecpar->sample_rate = value; }
     public int                  SeekPreRoll         { get => _codecpar->seek_preroll;           set => _codecpar->seek_preroll = value; }
-    public int                  TrailPad            { get => _codecpar->trailing_padding;       set => _codecpar->trailing_padding= value; }
+    //public int                  TrailPad            { get => _codecpar->trailing_padding;       set => _codecpar->trailing_padding= value; } // unused
 
     public FFmpegClass          AVClass             => FFmpegClass.Get(_ptr, EA)!;
     public int                  Channels            => _codecpar->ch_layout.nb_channels;
@@ -45,7 +45,7 @@ public unsafe class AudioStreamMux : MediaStreamMux
         SampleFormat        = stream.SampleFormat;
         SampleRate          = stream.SampleRate;
         SeekPreRoll         = stream.SeekPreRoll;
-        TrailPad            = stream.TrailPad;
+        //TrailPad            = stream.TrailPad; // unused
 
         stream.ExtraDataCopyTo(&_codecpar->extradata, &_codecpar->extradata_size);
         stream.SideDataCopyTo(&_ptr->codecpar->coded_side_data, &_ptr->codecpar->nb_coded_side_data);

@@ -14,7 +14,7 @@ public unsafe class AudioStream : MediaStream
     public AVSampleFormat       SampleFormat        => (AVSampleFormat)_codecpar->format;
     public int                  SampleRate          => _codecpar->sample_rate;
     public int                  SeekPreRoll         => _codecpar->seek_preroll;
-    public int                  TrailPad            => _codecpar->trailing_padding;
+    //public int                  TrailPad            => _codecpar->trailing_padding; // Unused
 
     // helpers
     public int                  Channels            => _codecpar->ch_layout.nb_channels;

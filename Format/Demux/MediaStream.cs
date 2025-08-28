@@ -33,7 +33,24 @@ public unsafe abstract class MediaStream
 
     public void ExtraDataCopyTo(byte** dstPtr, int* dstSize)
         => ExtraDataCopy(_codecpar->extradata, _codecpar->extradata_size, dstPtr, dstSize);
-    
+
+    #region IndexEntries
+    public int AddEntry(long pos, long timestamp, int size, int distance, IndexFlags flags)
+        => av_add_index_entry(this, pos, timestamp, size, distance, flags);
+
+    public int GetEntriesCount()
+        => avformat_index_get_entries_count(this);
+
+    public AVIndexEntry* GetEntry(int index)
+        => avformat_index_get_entry(this, index);
+
+    public AVIndexEntry* GetEntry(long timestamp, SeekFlags flags)
+        => avformat_index_get_entry_from_timestamp(this, timestamp, flags);
+
+    public int SearchTimestamp(long timestamp, SeekFlags flags)
+        => av_index_search_timestamp(this, timestamp, flags);
+    #endregion
+
     #region SideData RO
     public AVPacketSideData*    SideData            => _codecpar->coded_side_data;
     public int                  SideDataCount       => _codecpar->nb_coded_side_data;
@@ -97,4 +114,47 @@ public unsafe abstract class MediaStream
         AVMediaType.Attachment  => new AttachmentStream (fmt, stream),
         _                       => new UnknownStream    (fmt, stream),
     };
+
+    public string GetDump()
+    {
+        var metadata = Metadata;
+        string dump = $"[Stream #{Index:D2}] {CodecType}";
+        if (this is not VideoStream && metadata != null && metadata.TryGetValue("language", out string? lang))
+            dump += $" ({lang})";
+        
+        if (StartTime != NoTs || Duration != NoTs)
+        {
+            dump += "\r\n\t[Time	 ] ";
+            dump += StartTime != NoTs ? $"{McsToTime(av_rescale_q(StartTime, Timebase, TIME_BASE_Q))} ({StartTime})" : "-";
+            dump += " / ";
+            dump += Duration != NoTs ? $"{McsToTime(av_rescale_q(Duration, Timebase, TIME_BASE_Q))} ({Duration})": "-";
+            dump += $" (tb: {Timebase})";
+        }
+
+        var codecDescriptor = CodecDescriptor;
+
+        if (codecDescriptor != null)
+            dump+= $"\r\n\t[Codec   ] {codecDescriptor.Name} | {GetProfile(codecDescriptor.Profiles, _codecpar->profile).Name}";
+        else
+            dump+= $"\r\n\t[Codec   ] {CodecId}";
+
+        if (CodecTag != 0)
+            dump += $" ({GetFourCCString(CodecTag)} / 0x{CodecTag:X4})";
+
+        if (BitRate > 0)
+            dump += $", {(int)(BitRate / 1000)} kb/s";
+
+        if (Disposition != DispositionFlags.None)
+            dump += $" - ({GetFlagsAsString(Disposition)})";
+
+        if (this is AudioStream audio)
+            dump += $"\r\n\t[Format  ] {audio.SampleRate} Hz, {audio.ChannelLayout.GetName()}, {audio.SampleFormat.GetName()}";
+        else if (this is VideoStream video)
+            dump += $"\r\n\t[Format  ] {video.PixelFormat} ({video.ColorSpace}, {video.ColorRange}, {video.ColorPrimaries}, {video.ColorTransfer}, {video.ChromaLocation}, {video.FieldOrder}), {video.Width}x{video.Height} @ {DoubleToTimeMini(video.FrameRate.ToDouble())} fps [SAR1: {video.SampleAspectRatio} SAR2: {video.SampleAspectRatio} DAR: {video.GetDisplayAspectRatio()}]";
+
+        if (metadata != null)
+            dump += $"\r\n{DumpMetadata(metadata, "language")}";
+        
+        return dump;
+    }
 }

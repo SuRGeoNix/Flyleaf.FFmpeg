@@ -23,6 +23,13 @@ public unsafe abstract class AudioFrameBase : FrameBase
     public FFmpegResult Ref(AudioFrameBase frame)
         => base.Ref(frame);
 
+    public AudioFrame Ref()
+    {
+        AudioFrame frame = new();
+        Ref(frame);
+        return frame;
+    }
+
     public void MoveRef(AudioFrameBase frame)
         => base.MoveRef(frame);
 

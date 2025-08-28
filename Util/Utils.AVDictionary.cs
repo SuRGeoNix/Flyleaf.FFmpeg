@@ -44,4 +44,12 @@ public unsafe static partial class Utils
 
     public static void AVDictFree(AVDictionary** dictPtr)
         => av_dict_free(dictPtr);
+
+    internal static void AddToDicList<TKey, TValue>(Dictionary<TKey, List<TValue>> dic, TKey key, TValue value) where TKey : notnull
+    {
+        if (dic.TryGetValue(key, out var spec))
+            spec.Add(value);
+        else
+            dic.Add(key, [value]);
+    }
 }

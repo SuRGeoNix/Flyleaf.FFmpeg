@@ -21,6 +21,9 @@ public unsafe abstract class BufferSource : FilterContext
     public FFmpegResult SendFrame(AVFrame* frame, AVBuffersrcFlag flags = AVBuffersrcFlag.None)
         => new(av_buffersrc_add_frame_flags(_ptr, frame, flags));
 
+    public FFmpegResult Drain()
+        => new(av_buffersrc_add_frame_flags(_ptr, null, AVBuffersrcFlag.None));
+
     public FFmpegResult Close(long pts, AVBuffersrcFlag flags = AVBuffersrcFlag.None)
         => new(av_buffersrc_close(_ptr, pts, flags));
 }

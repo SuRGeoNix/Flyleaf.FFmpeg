@@ -41,14 +41,21 @@ public unsafe partial class IOContext : IDisposable
     public long             Position            => _ptr->pos;                // Position in the file
     public long             Position2           => avio_tell(_ptr);          // Position in the file + buffer (in case of !direct)
     public IOSeekableFlags  Seekable            => _ptr->seekable;           // same as CanSeek?
-    public Stream?          Stream              => stream;
     public long             Size                => avio_size(_ptr);          // might not supported*?
 
+    // Stream only***
+    public Stream?          Stream              => stream;
+
+    // Url only***
+    public string?          Url                 { get; private set; } // or Stream?
+    public string?          Protocol            { get; private set; } //=> GetUrlProtocol(Url);
     public string?          ProtocolWhitelist   => GetString(_ptr->protocol_whitelist);
     public string?          ProtocolBlacklist   => GetString(_ptr->protocol_blacklist);
 
-    public string?          Url                 { get; private set; } // or Stream?
-    
+    // HTTP(s) only
+    public string?          MimeType            => mimeType;
+    string? mimeType;
+
     // Can be parsed to format context directly*
     internal AVIOInterruptCB_callback? InterruptDlgt;
     internal AVIOInterruptCB int_cb; 
@@ -80,6 +87,12 @@ public unsafe partial class IOContext : IDisposable
         fixed (AVIOInterruptCB* interruptPtr = &int_cb)
             fixed (AVIOContext** ctxPtr = &_ptr)
                 new FFmpegResult(avio_open2(ctxPtr, url, flags, interruptPtr, avopts != null ? &avopts : null)).ThrowOnFailure();
+
+        // TBR: Access IOContext->url protocol directly* | FFIOContext->opaque https://ffmpeg.org/doxygen/trunk/aviobuf_8c_source.html#l00050
+        Protocol = GetUrlProtocol(url);
+        if (Protocol != null && Protocol.StartsWith("http"))
+            AVClass.Child!.Child!.ValuesRO.TryGetValue("mime_type", out mimeType);
+            //(_, mimeType) = AVClass.GetString("mime_type");
     }
 
     public void Flush()
@@ -102,6 +115,13 @@ public unsafe partial class IOContext : IDisposable
 
     public static string? GetUrlProtocol(string url)
         => avio_find_protocol_name(url);
+
+    public string GetDump() =>
+        $"""
+        [Url  : {Url}]
+        [Proto: {Protocol}]{(mimeType != null ? $" [Mime: {mimeType}]" : "")}
+        [Seek : {Seekable}] [Pos: {Position}] [Pos2: {Position2}] [Size: {Size}]
+        """;
 
     #region Disposal
     public bool Disposed    => _ptr == null; // && Owner?

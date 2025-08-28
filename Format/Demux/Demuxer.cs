@@ -57,7 +57,7 @@ public unsafe class Demuxer : FormatContext
 
     public string?          Url                         => GetString(_ptr->url);
     //public IOContext?       IOContext                   { get; } // Should expose? will be user's IO or current format's IO (can be change*>?)
-    public DemuxerSpec      FormatSpec                  => (DemuxerSpec)FormatSpecByPtr[(nint)_ptr->iformat];
+    public DemuxerSpec      DemuxerSpec                 => (DemuxerSpec)FormatSpecByPtr[(nint)_ptr->iformat];
     public FmtCtxFlags      CtxFlags                    => _ptr->ctx_flags; // With HLS we need to remove Unseekable everytime* consider RW?
     public long             StartTimeMcs                => _ptr->start_time;
     public long             StartRealTimeMcs            => _ptr->start_time_realtime;
@@ -77,8 +77,10 @@ public unsafe class Demuxer : FormatContext
     #endregion
 
     #region (Static) Exposing default IO Open/Close (might be used by custom IO Open/Close)
-    public static AVFormatContext_io_open      IOOpenDefaultDlgt   { get;  private set; }
-    public static AVFormatContext_io_close2    IOCloseDefaultDlgt  { get;  private set; }
+    public static AVFormatContext_io_open
+                            IOOpenDefaultDlgt           { get;  private set; }
+    public static AVFormatContext_io_close2
+                            IOCloseDefaultDlgt          { get;  private set; }
 
     static Demuxer()
     {
@@ -103,7 +105,7 @@ public unsafe class Demuxer : FormatContext
 
     public Demuxer(AVFormatContext_io_open? ioopenClbk = null, AVFormatContext_io_close2? iocloseClbk = null) : base(avformat_alloc_context()) // constructor for avformat_open_input? not required*
     {
-        Flags = DemuxerFlags.None; // wrongly sets AutoBsf by default (transfer to demuxer constructor*)
+        Flags = DemuxerFlags.None; // wrongly sets AutoBsf by default
         
         if (ioopenClbk != null)
         {
@@ -277,7 +279,7 @@ public unsafe class Demuxer : FormatContext
     public bool IsEnabled(MediaProgram program)
         => program._ptr->discard < AVDiscard.All;
 
-    public void Enable(MediaStream stream, AVDiscard discard = AVDiscard.Default)
+    public MediaProgram? Enable(MediaStream stream, AVDiscard discard = AVDiscard.Default)
     {
         // Enable stream
         stream._ptr->discard = discard;
@@ -287,19 +289,24 @@ public unsafe class Demuxer : FormatContext
         // Possible let user force which program to use for the stream / Also if we enable/disable multiple streams at once we can select the best combination*
         if (stream.programs.Count > 0 && 
             stream.programs.All(p => p._ptr->discard == AVDiscard.All))
-            stream.programs[0]._ptr->discard = AVDiscard.Default;            
+        {
+            stream.programs[0]._ptr->discard = AVDiscard.Default;
+            return stream.programs[0];
+        }
+        
+        return null;
     }
 
-    public void Disable(MediaStream stream)
+    public List<MediaProgram>? Disable(MediaStream stream)
     {
         // Disable stream
         stream._ptr->discard = AVDiscard.All;
 
         // Disable stream's programs if all of their streams are disabled
         // TBR: we could re-evaluate the programs here in case the rest streams can now move to another enabled program
-        stream.programs.
-            Where(p => p.streams.All(s => s._ptr->discard == AVDiscard.All)).ToList().
-            ForEach(p => p._ptr->discard = AVDiscard.All);
+        var programs = stream.programs.Where(p => p.streams.All(s => s._ptr->discard == AVDiscard.All)).ToList();
+        programs.ForEach(p => p._ptr->discard = AVDiscard.All);
+        return programs;
     }
     #endregion
 
@@ -400,9 +407,22 @@ public unsafe class Demuxer : FormatContext
     public FFmpegResult ReadPause() // only for RTSP (required?)
         => new(av_read_pause(_ptr));
 
-    // should go to demuxed live stream?
-    public FFmpegResult SearchTimestamp(long ts, AVStream* stream, SeekFlags flags = SeekFlags.None)
-        => new(av_index_search_timestamp(stream, ts, flags));
+    public string GetDump() =>
+        $"""
+        [Time	 ] {McsToTime(StartTimeMcs)} / {McsToTime(DurationMcs)} (based on {DurationEstimationMethod}){(StartRealTimeMcs != NoTs ? $" [RealTime: {StartRealTimeEpoch.ToLocalTime()}]" : "")}{(BitRate > 0 ? $" {BitRate/1000} kb/s" : "")}
+        [Format  ] {DemuxerSpec.LongName} ({DemuxerSpec.Name}){(DemuxerSpec.Flags != DemuxerSpecFlags.None ? $" [Flags: {DemuxerSpec.Flags}]" : "")}{(CtxFlags != FmtCtxFlags.None ? $" [CtxFlags: {CtxFlags}]" : "")}{(DemuxerSpec.MimeType != null ? $" [Mime: {string.Join(',', DemuxerSpec.MimeType)}]" : "")}{(DemuxerSpec.Extensions != null ? $" [Ext(s): {string.Join(',', DemuxerSpec.Extensions)}]" : "")}
+        {(_ptr->metadata != null ? DumpMetadata(Metadata) : "")}
+        {GetDumpStreams()}
+        """;
+
+    public string GetDumpStreams()
+    {
+        string dump = "";
+        foreach(var stream in Streams)
+            dump += stream.GetDump() + "\r\n";
+
+        return dump;
+    }
 
     protected override void Close()
     {

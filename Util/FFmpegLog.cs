@@ -8,7 +8,7 @@ public static class FFmpegLog
         => av_log_set_level(logLevel);
 
     public static LogLevel GetLogLevel()
-        => (LogLevel)av_log_get_level(); // set this to P/Invoke
+        => av_log_get_level();
 
     public static void UnSetCallback()
     {

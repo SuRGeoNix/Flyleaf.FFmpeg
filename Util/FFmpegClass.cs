@@ -114,46 +114,10 @@ public unsafe class FFmpegClass : FFmpegClassSpec
     public FFmpegResult Set(string name, byte* data, int dataCount, OptSearchFlags searchFlags = OptSearchFlags.Children)
         => new(av_opt_set_bin(ctx, name, data, dataCount, searchFlags));
 
-    public FFmpegResult Set<T>(string name, T[] value, OptSearchFlags searchFlags = OptSearchFlags.Children) where T : unmanaged
+    public FFmpegResult Set<T>(string name, T[] value, AVOptionType type, OptSearchFlags searchFlags = OptSearchFlags.Children, uint startElement = 0) where T : unmanaged
     {
-        //Span<int> arr = stackalloc int[value.Length];
-        //for (int i = 0; i < arr.Length; i++)
-        //    arr[i] = Convert.ToInt32(value[i]);
-
         fixed(T* ptr = value)
-            return new(av_opt_set_bin(ctx, name, (byte*)ptr, sizeof(int) * value.Length, searchFlags));
-    }
-
-    //public int Set<T>(string name, List<T> value, OptSearchFlags searchFlags = OptSearchFlags.Children) where T : Enum
-    //{
-    //    Span<int> arr = stackalloc int[value.Count];
-    //    for (int i = 0; i < arr.Length; i++)
-    //        arr[i] = Convert.ToInt32(value[i]);
-        
-    //    fixed(int* ptr = arr)
-    //        return av_opt_set_bin(ctx, name, (byte*)ptr, sizeof(int) * arr.Length, searchFlags);
-    //}
-
-    //public int Set(string name, List<int> value, OptSearchFlags searchFlags = OptSearchFlags.Children)
-    //{
-    //    Span<int> arr = stackalloc int[value.Count];
-    //    for (int i = 0; i < arr.Length; i++)
-    //        arr[i] = value[i];
-
-    //    fixed(int* ptr = arr)
-    //        return av_opt_set_bin(ctx, name, (byte*)ptr, sizeof(int) * arr.Length, searchFlags);
-    //}
-
-    public FFmpegResult Set(string name, int[] value, OptSearchFlags searchFlags = OptSearchFlags.Children)
-    {
-        fixed(int* ptr = value)
-            return new(av_opt_set_bin(ctx, name, (byte*)ptr, sizeof(int) * value.Length, searchFlags));
-    }
-
-    public FFmpegResult Set(string name, ulong[] value, OptSearchFlags searchFlags = OptSearchFlags.Children)
-    {
-        fixed(ulong* ptr = value)
-            return new(av_opt_set_bin(ctx, name, (byte*)ptr, sizeof(ulong) * value.Length, searchFlags));
+            return new(av_opt_set_array(ctx, name, searchFlags, startElement, (uint)value.Length, type, ptr));
     }
 
     public FFmpegResult Set(string name, AVChannelLayout value, OptSearchFlags searchFlags = OptSearchFlags.Children)

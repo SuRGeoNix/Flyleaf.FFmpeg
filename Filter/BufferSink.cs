@@ -34,27 +34,14 @@ public unsafe class AudioBufferSink : BufferSink
 
     public void SetParameters(AudioBufferSinkParams param)
     {
-        string chs  = "";
-        if (param.ChannelLayouts != null)
-        {
-            for (int i = 0; i < param.ChannelLayouts.Length; i++)
-            {
-                chs += param.ChannelLayouts[i];
-                if (i != param.ChannelLayouts.Length - 1)
-                    chs += "|";
-            }
-
-            AVClass.Set("ch_layouts",           chs).ThrowOnFailure();
-        }
-        
         if (param.SampleFormats != null)
-            AVClass.Set("sample_fmts",          param.SampleFormats).ThrowOnFailure();
+            AVClass.Set("sample_formats",   param.SampleFormats,    AVOptionType.SampleFmt).    ThrowOnFailure();
 
         if (param.SampleRates != null)
-            AVClass.Set("sample_rates",         param.SampleRates).ThrowOnFailure();
-        
-        if (param.AllChannelCount != null)
-            AVClass.Set("all_channel_counts",   param.AllChannelCount.Value).ThrowOnFailure();
+            AVClass.Set("samplerates",      param.SampleRates,      AVOptionType.Int).          ThrowOnFailure();
+
+        if (param.ChannelLayouts != null)
+            AVClass.Set("channel_layouts",  param.ChannelLayouts,   AVOptionType.Chlayout).     ThrowOnFailure();
     }
 
     public FFmpegResult RecvFrame(AVFrame* frame, int samples)
@@ -93,13 +80,16 @@ public unsafe class VideoBufferSink : BufferSink
     public void SetParameters(VideoBufferSinkParams param)
     {
         if (param.PixelFormats != null)
-            AVClass.Set("pix_fmts",     param.PixelFormats).ThrowOnFailure();
+            AVClass.Set("pixel_formats",param.PixelFormats, AVOptionType.PixelFmt). ThrowOnFailure();
         
         if (param.ColorSpaces != null)
-            AVClass.Set("color_spaces", param.ColorSpaces).ThrowOnFailure();
+            AVClass.Set("colorspaces",  param.ColorSpaces,  AVOptionType.Int).      ThrowOnFailure();
 
         if (param.ColorRanges != null)
-            AVClass.Set("color_ranges", param.ColorRanges).ThrowOnFailure();
+            AVClass.Set("colorranges",  param.ColorRanges,  AVOptionType.Int).      ThrowOnFailure();
+
+        if (param.AlphaModes != null)
+            AVClass.Set("alphamodes",  param.AlphaModes,    AVOptionType.Int).      ThrowOnFailure();
     }
 
     public FFmpegResult RecvFrame(VideoFrameBase frame, BufferSinkFlags flags = BufferSinkFlags.None)

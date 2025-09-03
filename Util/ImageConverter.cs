@@ -2,6 +2,8 @@
 
 public unsafe class ImageConverter : IDisposable
 {
+    // TODO: sws_frame_setup, sws_is_noop, sws_test_*
+     
     public FFmpegClass AVClass  => FFmpegClass.Get(ctx)!;
 
     public ImageConverter(AVPixelFormat srcFormat, int srcWidth, int srcHeight, AVPixelFormat dstFormat, int dstWidth, int dstHeight, SwsFlags flags)
@@ -65,7 +67,7 @@ public unsafe class ImageConverter : IDisposable
     public static implicit operator SwsContext*(ImageConverter ctx)
         => ctx.ctx;
 
-    SwsContext* ctx;
+    readonly SwsContext* ctx;
 
     ~ImageConverter()
     {
@@ -83,6 +85,12 @@ public unsafe class ImageConverter : IDisposable
     }
 
     void Free()
-        { sws_freeContext(ctx); ctx = null; }
+    {
+        if (ctx != null)
+            fixed (SwsContext** ctxPtr = &ctx)
+                sws_free_context(ctxPtr);
+
+        //sws_freeContext(ctx); ctx = null; // TBR: any diff?*
+    }
     #endregion
 }

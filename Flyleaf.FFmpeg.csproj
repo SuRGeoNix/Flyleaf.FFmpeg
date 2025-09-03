@@ -11,23 +11,13 @@
 	<IsOSX Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
 	<IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
 	<Description>FFmpeg Bindings for C#/.NET (Extended)</Description>
-	<Version>7.1.1</Version>
+	<Version>8.0.0.1</Version>
 	<Authors>SuRGeoNix</Authors>
 	<Copyright>SuRGeoNix © 2025</Copyright>
 	<PackageTags>flyleaf;ffmpeg;bindings</PackageTags>
 	<Title>FFmpeg Bindings for C#/.NET (Extended)</Title>
 	<PackageReleaseNotes>
-		- Decode: Renames PacketTimebase to Timebase
-		- MediaFrame: Adds Ref and Dumps
-		- Extensions: Adds TimestampExtension
-		- Filter: Adds BufferSource Drain
-		- Muxer: Renames FormatSpec to MuxerSpec
-		- Demuxer: Renames FormatSpec to DemuxerSpec
-		- Demuxer: Adds Dumps
-		- MediaStream: Adds IndexEntries and Dumps
-		- IOContext: Adds Protocol, MimeType and Dumps
-		- Packet: Adds Dumps
-		- Logging: Adds Logging
+		Filter.BufferSink: Fix for deprecated options
 	</PackageReleaseNotes>
 	<PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
   </PropertyGroup>

@@ -28,6 +28,6 @@ public unsafe abstract class AVEncoder : Encoder
 
     // TBR: AV_CODEC_FLAG_RECON_FRAME (reconstructed frame - preview of the frame that will be after decoding the encoded pkt - last success GetPacket*)
     public FFmpegResult RecvFrame(AVFrame* frame)
-        => new(avcodec_receive_frame(_ptr, frame));
+        => new(avcodec_receive_frame_flags(_ptr, frame, 0));
 
 }

@@ -24,5 +24,8 @@ public unsafe abstract class AVDecoder : Decoder
         => new(avcodec_send_packet(_ptr, null));
 
     public FFmpegResult RecvFrame(AVFrame* frame)
-        => new(avcodec_receive_frame(_ptr, frame));
+        => new(avcodec_receive_frame_flags(_ptr, frame, 0));
+
+    public FFmpegResult RecvFrameSync(AVFrame* frame) // TBR: Currently only Sync flag for decoding | Fix flags in Bindings
+        => new(avcodec_receive_frame_flags(_ptr, frame, AV_CODEC_RECEIVE_FRAME_FLAG_SYNCHRONOUS));
 }

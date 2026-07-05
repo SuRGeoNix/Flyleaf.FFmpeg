@@ -121,10 +121,10 @@ public unsafe class DXVA2FramesContext : HWFramesContext
 
 public unsafe class D3D11VAFramesContext : HWFramesContext
 {
-    public nint                     Texture                 { get => (nint)_hwctx->texture; set => _hwctx->texture = (ID3D11Texture2D*)value; } // this can be provided by the user before init
-    public AVD3D11FrameDescriptor*  AVFrameDescriptor       { get => _hwctx->texture_infos; set => _hwctx->texture_infos = value; } // this is an array with indexes 
-    public uint                     MiscFlags               { get => _hwctx->MiscFlags;     set => _hwctx->MiscFlags = value; }
-    public uint                     BindFlags               { get => _hwctx->BindFlags;     set => _hwctx->BindFlags = value; }
+    public nint                     Texture                 { get => (nint)_hwctx->texture;         set => _hwctx->texture = (ID3D11Texture2D*)value; } // this can be provided by the user before init
+    public AVD3D11FrameDescriptor*  AVFrameDescriptor       { get => _hwctx->texture_infos;         set => _hwctx->texture_infos = value; } // this is an array with indexes 
+    public uint                     MiscFlags               { get => _hwctx->MiscFlags;             set => _hwctx->MiscFlags = value; }
+    public uint                     BindFlags               { get => _hwctx->BindFlags;             set => _hwctx->BindFlags = value; }
 
     public new readonly AVD3D11VAFramesContext* _hwctx;
 
@@ -134,8 +134,11 @@ public unsafe class D3D11VAFramesContext : HWFramesContext
 
 public unsafe class D3D12VAFramesContext : HWFramesContext
 {
-    public DXGI_FORMAT              DXGIFormat              { get => _hwctx->format;        set => _hwctx->format = value; }
-    public D3D12_RESOURCE_FLAGS     ResourceFlags           { get => _hwctx->flags;         set => _hwctx->flags = value; }
+    public nint                     TextureArray            { get => (nint)_hwctx->texture_array;   set => _hwctx->texture_array = (ID3D12Resource*)value; }
+    public DXGI_FORMAT              DXGIFormat              { get => _hwctx->format;                set => _hwctx->format = value; }
+    public AVD3D12VAFrameFlags      Flags                   { get => _hwctx->flags;                 set => _hwctx->flags = value; }
+    public D3D12_RESOURCE_FLAGS     ResourceFlags           { get => _hwctx->resource_flags;        set => _hwctx->resource_flags = value; }
+    public D3D12_HEAP_FLAGS         HeapFlags               { get => _hwctx->heap_flags;            set => _hwctx->heap_flags = value; }
 
     public new readonly AVD3D12VAFramesContext* _hwctx;
 

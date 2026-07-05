@@ -4,6 +4,7 @@ public unsafe abstract class VideoFrameBase : FrameBase
 {
     public AVRational           SampleAspectRatio       { get => _ptr->sample_aspect_ratio;     set => _ptr->sample_aspect_ratio = value;}
 
+    public AVAlphaMode          AlphaMode               { get => _ptr->alpha_mode;              set => _ptr->alpha_mode     = value; }
     public AVColorPrimaries     ColorPrimaries          { get => _ptr->color_primaries;         set => _ptr->color_primaries= value; }
     public AVColorTransferCharacteristic
                                 ColorTransfer           { get => _ptr->color_trc;               set => _ptr->color_trc      = value; }

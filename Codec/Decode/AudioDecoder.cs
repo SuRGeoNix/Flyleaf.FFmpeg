@@ -84,9 +84,11 @@ public unsafe class AudioDecoder : AVDecoder
     }
 
     public FFmpegResult RecvFrame(AudioFrameBase frame)
-        => new(avcodec_receive_frame(_ptr, frame));
+        => new(avcodec_receive_frame_flags(_ptr, frame, 0));
+
+    public FFmpegResult RecvFrameSync(AudioFrameBase frame)
+        => new(avcodec_receive_frame_flags(_ptr, frame, AV_CODEC_RECEIVE_FRAME_FLAG_SYNCHRONOUS));
 
     public int GetFrameDuration(int frameBytes)
         => av_get_audio_frame_duration(_ptr, frameBytes);
-
 }

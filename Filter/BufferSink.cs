@@ -59,6 +59,7 @@ public unsafe class AudioBufferSink : BufferSink
 
 public unsafe class VideoBufferSink : BufferSink
 {
+    public AVAlphaMode      AlphaMode           => InPads[0].FilterLink is VideoFilterLink link ? link.AlphaMode            : AVAlphaMode.Unspecified;
     public AVPixelFormat    PixelFormat         => InPads[0].FilterLink is VideoFilterLink link ? link.PixelFormat          : AVPixelFormat.None;
     public AVColorSpace     ColorSpace          => InPads[0].FilterLink is VideoFilterLink link ? link.ColorSpace           : AVColorSpace.Unspecified;
     public AVColorRange     ColorRange          => InPads[0].FilterLink is VideoFilterLink link ? link.ColorRange           : AVColorRange.Unspecified;

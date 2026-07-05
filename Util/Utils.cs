@@ -72,6 +72,8 @@ public unsafe static partial class Utils
             return GetString(chBytesPtr)!;
         }
     }
+    public static string GetName(AVAlphaMode alphaMode)
+        => av_alpha_mode_name(alphaMode);
 
     public static List<T> GetFlagsAsList<T>(T value) where T : Enum
     {
@@ -111,6 +113,9 @@ public unsafe static partial class Utils
 
     public static AVSampleFormat GetSampleFormat(string name)
         => av_get_sample_fmt(name);
+
+    public static AVAlphaMode GetAlphaMode(string name)
+        => av_alpha_mode_from_name(name);
 
     public static void AVStrDupReplace(string? str, byte** strPtr)
     {

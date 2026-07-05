@@ -72,6 +72,8 @@ public unsafe abstract class MediaStream
     // helpers
     //public string               CodecName           => avcodec_get_name(CodecId);
     //public string               CodecTagName        => GetFourCCString(CodecTag);
+    // TBR: av_mime_codec_str (requires AVBPrint?*) | Also for CodecContext etc.
+
     public bool                 Enabled             => _ptr->discard != AVDiscard.All; // TBR: Demux only but here is just RO (can be used from Muxer)
 
     public Muxer?               Muxer               { get; private set; }

@@ -18,6 +18,7 @@ public unsafe class VideoStream : MediaStream
     public AVRational           GuessedSampleAspectRatio
                                                     => av_guess_sample_aspect_ratio(null, _ptr, null);
 
+    public AVAlphaMode          AlphaMode           => _codecpar->alpha_mode;
     public AVChromaLocation     ChromaLocation      => _codecpar->chroma_location;
     public AVColorPrimaries     ColorPrimaries      => _codecpar->color_primaries;
     public AVColorRange         ColorRange          => _codecpar->color_range;

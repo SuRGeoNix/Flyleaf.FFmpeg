@@ -69,6 +69,7 @@ public unsafe class VideoFilterLink : FilterLink
 {
     public VideoFilterLink(AVFilterLink* link, FilterPadIn inPad, FilterPadOut outPad) : base(link, inPad, outPad) { }
 
+    public AVAlphaMode          AlphaMode           => _ptr->alpha_mode;
     public AVPixelFormat        PixelFormat         => (AVPixelFormat)_ptr->format;
     public int                  Width               => _ptr->w;
     public int                  Height              => _ptr->h;

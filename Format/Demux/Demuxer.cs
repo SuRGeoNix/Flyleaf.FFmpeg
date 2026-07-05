@@ -407,6 +407,12 @@ public unsafe class Demuxer : FormatContext
     public FFmpegResult ReadPause() // only for RTSP (required?)
         => new(av_read_pause(_ptr));
 
+    public int SendCommand(AVFormatCommandID cmd, void* data)
+        => avformat_send_command(_ptr, cmd, data);
+
+    public int RecvCommand(AVFormatCommandID cmd, void** data)
+        => avformat_receive_command_reply(_ptr, cmd, data);
+
     public string GetDump() =>
         $"""
         [Time	 ] {McsToTime(StartTimeMcs)} / {McsToTime(DurationMcs)} (based on {DurationEstimationMethod}){(StartRealTimeMcs != NoTs ? $" [RealTime: {StartRealTimeEpoch.ToLocalTime()}]" : "")}{(BitRate > 0 ? $" {BitRate/1000} kb/s" : "")}

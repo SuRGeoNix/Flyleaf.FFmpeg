@@ -70,6 +70,7 @@ public unsafe class VideoDecoder : AVDecoder
                                 ColorTransfer           => _ptr->color_trc;
     public AVColorSpace         ColorSpace              => _ptr->colorspace;
     public AVChromaLocation     ChromaLocation          => _ptr->chroma_sample_location;
+    public AVAlphaMode          AlphaMode               => _ptr->alpha_mode;
 
     public VideoDecoderSpec     CodecSpec               { get; }
 
@@ -111,7 +112,7 @@ public unsafe class VideoDecoder : AVDecoder
         PixelFormat         = stream.PixelFormat;
         ColorRange          = stream.ColorRange;
         FieldOrder          = stream.FieldOrder;
-        
+
         stream.ExtraDataCopyTo(&_ptr->extradata, &_ptr->extradata_size);
         stream.SideDataCopyTo(&_ptr->coded_side_data, &_ptr->nb_coded_side_data);
 
@@ -121,11 +122,15 @@ public unsafe class VideoDecoder : AVDecoder
         //ChromaLocation = stream.ChromaLocation;
         //ColorPrimaries = stream.ColorPrimaries;
         //ColorSpace = stream.ColorSpace;
-        //VideoDelay = stream.VideoDelay;   
+        //VideoDelay = stream.VideoDelay;
+        //AlphaMode = stream.AlphaMode;
     }
 
     public FFmpegResult RecvFrame(VideoFrameBase frame)
-        => new(avcodec_receive_frame(_ptr, frame));
+        => new(avcodec_receive_frame_flags(_ptr, frame, 0));
+
+    public FFmpegResult RecvFrameSync(VideoFrameBase frame)
+        => new(avcodec_receive_frame_flags(_ptr, frame, AV_CODEC_RECEIVE_FRAME_FLAG_SYNCHRONOUS));
 
     public (int widthAligned, int heightAligned) AlignDimensions(int width, int height)
     {

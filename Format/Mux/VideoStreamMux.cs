@@ -15,6 +15,7 @@ public unsafe class VideoStreamMux : MediaStreamMux
     public AVRational           SampleAspectRatio   { get => _codecpar->sample_aspect_ratio;    set => _codecpar->sample_aspect_ratio = value;}
     public AVRational           SampleAspectRatio2  { get => _ptr->sample_aspect_ratio;         set => _ptr->sample_aspect_ratio = value; }
     
+    public AVAlphaMode          AlphaMode           { get => _codecpar->alpha_mode;             set => _codecpar->alpha_mode = value; }
     public AVChromaLocation     ChromaLocation      { get => _codecpar->chroma_location;        set => _codecpar->chroma_location = value; }
     public AVColorPrimaries     ColorPrimaries      { get => _codecpar->color_primaries;        set => _codecpar->color_primaries = value; }
     public AVColorRange         ColorRange          { get => _codecpar->color_range;            set => _codecpar->color_range = value; }
@@ -61,6 +62,7 @@ public unsafe class VideoStreamMux : MediaStreamMux
         AvgFrameRate        = stream.AvgFrameRate;
         Metadata            = stream.Metadata;
 
+        AlphaMode           = stream.AlphaMode;
         ChromaLocation      = stream.ChromaLocation;
         ColorPrimaries      = stream.ColorPrimaries;
         ColorRange          = stream.ColorRange;
@@ -95,6 +97,7 @@ public unsafe class VideoStreamMux : MediaStreamMux
         CodecProfile        = encoder.CodecProfile;
 
         AvgFrameRate        = encoder.FrameRate; //?
+        AlphaMode           = encoder.AlphaMode;
         ChromaLocation      = encoder.ChromaLocation;
         ColorPrimaries      = encoder.ColorPrimaries;
         ColorRange          = encoder.ColorRange;

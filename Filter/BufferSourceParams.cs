@@ -96,6 +96,7 @@ public unsafe class VideoBufferSourceParams : BufferSourceParams
     public AVColorRange         ColorRange          { get => _ptr->color_range;             set => _ptr->color_range = value; }
     public AVRational           FrameRate           { get => _ptr->frame_rate;              set => _ptr->frame_rate = value; }
     public HWFramesContextBase? HWFramesContext     { get => _ptr->hw_frames_ctx == null ? null : new HWFramesContextView(_ptr->hw_frames_ctx); set => _ptr->hw_frames_ctx = value; } // ffmpeg keeps ref (check what we return get=>)
+    public AVAlphaMode          AlphaMode           { get => _ptr->alpha_mode;              set => _ptr->alpha_mode = value; }
 
     public VideoBufferSourceParams() : base() { }
     public VideoBufferSourceParams(VideoDecoder decoder) : base()

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+	<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -11,13 +11,13 @@
 	<IsOSX Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
 	<IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
 	<Description>FFmpeg Bindings for C#/.NET (Extended)</Description>
-	<Version>8.0.0.1</Version>
+	<Version>8.1.0</Version>
 	<Authors>SuRGeoNix</Authors>
-	<Copyright>SuRGeoNix © 2025</Copyright>
+	<Copyright>SuRGeoNix © 2026</Copyright>
 	<PackageTags>flyleaf;ffmpeg;bindings</PackageTags>
 	<Title>FFmpeg Bindings for C#/.NET (Extended)</Title>
 	<PackageReleaseNotes>
-		Filter.BufferSink: Fix for deprecated options
+		Updates to v8.1
 	</PackageReleaseNotes>
 	<PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
   </PropertyGroup>

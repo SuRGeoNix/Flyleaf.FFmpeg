@@ -141,7 +141,9 @@ public unsafe class D3D11VADeviceContext : HWDeviceContext
     public nint DeviceContext       => (nint)_hwctx->device_context;
     public nint VideoDevice         => (nint)_hwctx->video_device;
     public nint VideoDeviceContext  => (nint)_hwctx->video_context;
-    
+    public uint BindFlags           => _hwctx->BindFlags;
+    public uint MiscFlags           => _hwctx->MiscFlags;
+
     public new readonly AVD3D11VADeviceContext* _hwctx;
 
     public D3D11VADeviceContext(nint device) : base(AVHWDeviceType.D3d11va)
@@ -158,7 +160,11 @@ public unsafe class D3D12VADeviceContext : HWDeviceContext
 {
     public nint Device              => (nint)_hwctx->device;
     public nint VideoDevice         => (nint)_hwctx->video_device;
-    
+    public D3D12_RESOURCE_FLAGS
+                ResourceFlags       => _hwctx->resource_flags;
+    public D3D12_HEAP_FLAGS
+                HeapFlags           => _hwctx->heap_flags;
+
     public new readonly AVD3D12VADeviceContext* _hwctx;
 
     public D3D12VADeviceContext(nint device) : base(AVHWDeviceType.D3d12va)

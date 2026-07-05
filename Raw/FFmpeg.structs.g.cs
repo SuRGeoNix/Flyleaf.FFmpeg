@@ -64,6 +64,8 @@ public unsafe struct AVBufferSrcParameters
     public AVColorRange color_range;
     public AVFrameSideData** side_data;
     public int nb_side_data;
+    /// <summary>Video only, the alpha mode.</summary>
+    public AVAlphaMode alpha_mode;
 }
 
 /// <summary>An AVChannelCustom defines a single channel within a custom order layout</summary>
@@ -292,6 +294,7 @@ public unsafe struct AVCodecContext
     /// <summary>custom intra quantization matrix - encoding: Set by user, can be NULL. - decoding: unused.</summary>
     public ushort* chroma_intra_matrix;
     /// <summary>precision of the intra DC coefficient - 8 - encoding: Set by user. - decoding: Set by libavcodec</summary>
+    [Obsolete("Use the MPEG-2 encoder's private option \"intra_dc_precision\" instead.")]
     public int intra_dc_precision;
     /// <summary>minimum MB Lagrange multiplier - encoding: Set by user. - decoding: unused</summary>
     public int mb_lmin;
@@ -467,6 +470,8 @@ public unsafe struct AVCodecContext
     /// <summary>Array containing static side data, such as HDR10 CLL / MDCV structures. Side data entries should be allocated by usage of helpers defined in libavutil/frame.h.</summary>
     public AVFrameSideData** decoded_side_data;
     public int nb_decoded_side_data;
+    /// <summary>Indicates how the alpha channel of the video is represented. - encoding: Set by user - decoding: Set by libavcodec</summary>
+    public AVAlphaMode alpha_mode;
 }
 
 /// <summary>This struct describes the properties of a single codec described by an AVCodecID.</summary>
@@ -555,11 +560,14 @@ public unsafe struct AVCodecParameters
     public int trailing_padding;
     /// <summary>Audio only. Number of samples to skip after a discontinuity.</summary>
     public int seek_preroll;
+    /// <summary>Video with alpha channel only. Alpha channel handling</summary>
+    public AVAlphaMode alpha_mode;
 }
 
 public unsafe struct AVCodecParser
 {
     public int_array7 codec_ids;
+    /// <summary>*************************************************************** All fields below this line are not part of the public API. They may not be used outside of libavcodec and can be changed and removed at will. New public fields should be added right above. ****************************************************************</summary>
     public int priv_data_size;
     public AVCodecParser_parser_init_func parser_init;
     public AVCodecParser_parser_parse_func parser_parse;
@@ -698,6 +706,10 @@ public unsafe struct AVD3D11VADeviceContext
     public AVD3D11VADeviceContext_lock_func @lock;
     public AVD3D11VADeviceContext_unlock_func unlock;
     public void* lock_ctx;
+    /// <summary>D3D11_TEXTURE2D_DESC.BindFlags to be applied to D3D11 resources allocated for frames using this device context.</summary>
+    public uint BindFlags;
+    /// <summary>D3D11_TEXTURE2D_DESC.MiscFlags to be applied to D3D11 resources allocated for frames using this device context.</summary>
+    public uint MiscFlags;
 }
 
 /// <summary>This struct is allocated as AVHWFramesContext.hwctx</summary>
@@ -724,6 +736,10 @@ public unsafe struct AVD3D12VADeviceContext
     public AVD3D12VADeviceContext_lock_func @lock;
     public AVD3D12VADeviceContext_unlock_func unlock;
     public void* lock_ctx;
+    /// <summary>Resource flags to be applied to D3D12 resources allocated for frames using this device context.</summary>
+    public D3D12_RESOURCE_FLAGS resource_flags;
+    /// <summary>Heap flags to be applied to D3D12 resources allocated for frames using this device context.</summary>
+    public D3D12_HEAP_FLAGS heap_flags;
 }
 
 /// <summary>D3D12VA frame descriptor for pool allocation.</summary>
@@ -731,8 +747,12 @@ public unsafe struct AVD3D12VAFrame
 {
     /// <summary>The texture in which the frame is located. The reference count is managed by the AVBufferRef, and destroying the reference will release the interface.</summary>
     public ID3D12Resource* texture;
+    /// <summary>Index of the subresource within the texture.</summary>
+    public int subresource_index;
     /// <summary>The sync context for the texture</summary>
     public AVD3D12VASyncContext sync_ctx;
+    /// <summary>A combination of AVD3D12VAFrameFlags. Set by AVD3D12VAFramesContext.</summary>
+    public AVD3D12VAFrameFlags flags;
 }
 
 /// <summary>This struct is allocated as AVHWFramesContext.hwctx</summary>
@@ -741,7 +761,13 @@ public unsafe struct AVD3D12VAFramesContext
     /// <summary>DXGI_FORMAT format. MUST be compatible with the pixel format. If unset, will be automatically set.</summary>
     public DXGI_FORMAT format;
     /// <summary>Options for working with resources. If unset, this will be D3D12_RESOURCE_FLAG_NONE.</summary>
-    public D3D12_RESOURCE_FLAGS flags;
+    public D3D12_RESOURCE_FLAGS resource_flags;
+    /// <summary>Options for working with heaps allocation when creating resources. If unset, this will be D3D12_HEAP_FLAG_NONE.</summary>
+    public D3D12_HEAP_FLAGS heap_flags;
+    /// <summary>In texture array mode, the D3D12 uses the same texture array (resource)for all pictures.</summary>
+    public ID3D12Resource* texture_array;
+    /// <summary>A combination of AVD3D12VAFrameFlags. Unless AV_D3D12VA_FRAME_FLAG_NONE is set, autodetected flags will be OR&apos;d based on the device and frame features during av_hwframe_ctx_init().</summary>
+    public AVD3D12VAFrameFlags flags;
 }
 
 /// <summary>This struct is used to sync d3d12 execution</summary>
@@ -931,6 +957,8 @@ public unsafe struct AVFilterFormatsConfig
     public AVFilterFormats* color_spaces;
     /// <summary>AVColorRange</summary>
     public AVFilterFormats* color_ranges;
+    /// <summary>AVAlphaMode</summary>
+    public AVFilterFormats* alpha_modes;
 }
 
 public unsafe struct AVFilterGraph
@@ -1012,6 +1040,8 @@ public unsafe struct AVFilterLink
     public AVRational time_base;
     public AVFrameSideData** side_data;
     public int nb_side_data;
+    /// <summary>alpha mode (for videos with an alpha channel)</summary>
+    public AVAlphaMode alpha_mode;
     /// <summary>Lists of supported formats / etc. supported by the input filter.</summary>
     public AVFilterFormatsConfig incfg;
     /// <summary>Lists of supported formats / etc. supported by the output filter.</summary>
@@ -1214,6 +1244,8 @@ public unsafe struct AVFormatContext
     public AVFormatContext_io_close2_func io_close2;
     /// <summary>Maximum number of bytes read from input in order to determine stream durations when using estimate_timings_from_pts in avformat_find_stream_info(). Demuxing only, set by the caller before avformat_find_stream_info(). Can be set to 0 to let avformat choose using a heuristic.</summary>
     public long duration_probesize;
+    /// <summary>Name of this format context, only used for logging purposes.</summary>
+    public byte* name;
 }
 
 /// <summary>This structure describes decoded (raw) audio or video data.</summary>
@@ -1278,7 +1310,7 @@ public unsafe struct AVFrame
     public AVBufferRef* hw_frames_ctx;
     /// <summary>Frame owner&apos;s private data.</summary>
     public AVBufferRef* opaque_ref;
-    /// <summary>cropping Video frames only. The number of pixels to discard from the the top/bottom/left/right border of the frame to obtain the sub-rectangle of the frame intended for presentation. @{</summary>
+    /// <summary>cropping Video frames only. The number of pixels to discard from the top/bottom/left/right border of the frame to obtain the sub-rectangle of the frame intended for presentation. @{</summary>
     public nuint crop_top;
     public nuint crop_bottom;
     public nuint crop_left;
@@ -1289,6 +1321,8 @@ public unsafe struct AVFrame
     public AVChannelLayout ch_layout;
     /// <summary>Duration of the frame, in the same units as pts. 0 if unknown.</summary>
     public long duration;
+    /// <summary>Indicates how the alpha channel of the video is to be handled. - encoding: Set by user - decoding: Set by libavcodec</summary>
+    public AVAlphaMode alpha_mode;
 }
 
 /// <summary>Structure to hold side data for an AVFrame.</summary>
@@ -1843,6 +1877,28 @@ public unsafe struct AVRTCPSenderReport
     public uint sender_nb_bytes;
 }
 
+public unsafe struct AVRTSPCommandRequest
+{
+    /// <summary>Headers sent in the request to the server</summary>
+    public AVDictionary* headers;
+    /// <summary>Body payload size</summary>
+    public nuint body_len;
+    /// <summary>Body payload</summary>
+    public byte* body;
+}
+
+public unsafe struct AVRTSPResponse
+{
+    /// <summary>Response status code from server</summary>
+    public int status_code;
+    /// <summary>Reason phrase from the server, describing the status in a human-readable way.</summary>
+    public byte* reason;
+    /// <summary>Body payload size</summary>
+    public nuint body_len;
+    /// <summary>Body payload</summary>
+    public byte* body;
+}
+
 /// <summary>This struct describes the properties of a side data type. Its instance corresponding to a given type can be obtained from av_frame_side_data_desc().</summary>
 public unsafe struct AVSideDataDescriptor
 {
@@ -2064,10 +2120,10 @@ public unsafe struct AVVulkanDeviceContext
     public int act_dev;
     /// <summary>This structure should be set to the set of features that present and enabled during device creation. When a device is created by FFmpeg, it will default to enabling all that are present of the shaderImageGatherExtended, fragmentStoresAndAtomics, shaderInt64 and vertexPipelineStoresAndAtomics features.</summary>
     public int device_features;
-    /// <summary>Enabled instance extensions. If supplying your own device context, set this to an array of strings, with each entry containing the specified Vulkan extension string to enable. Duplicates are possible and accepted. If no extensions are enabled, set these fields to NULL, and 0 respectively.</summary>
+    /// <summary>Enabled instance extensions. If supplying your own device context, set this to an array of strings, with each entry containing the specified Vulkan extension string to enable. Duplicates are possible and accepted. If no extensions are enabled, set these fields to NULL, and 0 respectively. av_vk_get_optional_instance_extensions() can be used to enumerate extensions that FFmpeg may use if enabled.</summary>
     public byte** enabled_inst_extensions;
     public int nb_enabled_inst_extensions;
-    /// <summary>Enabled device extensions. By default, VK_KHR_external_memory_fd, VK_EXT_external_memory_dma_buf, VK_EXT_image_drm_format_modifier, VK_KHR_external_semaphore_fd and VK_EXT_external_memory_host are enabled if found. If supplying your own device context, these fields takes the same format as the above fields, with the same conditions that duplicates are possible and accepted, and that NULL and 0 respectively means no extensions are enabled.</summary>
+    /// <summary>Enabled device extensions. By default, VK_KHR_external_memory_fd, VK_EXT_external_memory_dma_buf, VK_EXT_image_drm_format_modifier, VK_KHR_external_semaphore_fd and VK_EXT_external_memory_host are enabled if found. If supplying your own device context, these fields takes the same format as the above fields, with the same conditions that duplicates are possible and accepted, and that NULL and 0 respectively means no extensions are enabled. av_vk_get_optional_device_extensions() can be used to enumerate extensions that FFmpeg may use if enabled.</summary>
     public byte** enabled_dev_extensions;
     public int nb_enabled_dev_extensions;
     /// <summary>Queue family index for graphics operations, and the number of queues enabled for it. If unavailable, will be set to -1. Not required. av_hwdevice_create() will attempt to find a dedicated queue for each queue family, or pick the one with the least unrelated flags set. Queue indices here may overlap if a queue has to share capabilities.</summary>
@@ -2107,7 +2163,7 @@ public unsafe struct AVVulkanFramesContext
 {
     /// <summary>Controls the tiling of allocated frames. If left as VK_IMAGE_TILING_OPTIMAL (0), will use optimal tiling. Can be set to VK_IMAGE_TILING_LINEAR to force linear images, or VK_IMAGE_TILING_DRM_FORMAT_MODIFIER_EXT to force DMABUF-backed images.</summary>
     public int tiling;
-    /// <summary>Defines extra usage of output frames. If non-zero, all flags MUST be supported by the VkFormat. Otherwise, will use supported flags amongst: - VK_IMAGE_USAGE_SAMPLED_BIT - VK_IMAGE_USAGE_STORAGE_BIT - VK_IMAGE_USAGE_TRANSFER_SRC_BIT - VK_IMAGE_USAGE_TRANSFER_DST_BIT</summary>
+    /// <summary>Defines extra usage of output frames. If non-zero, all flags MUST be supported by the VkFormat. Regardless, frames will always have the following usage flags enabled, if supported by the format: - VK_IMAGE_USAGE_SAMPLED_BIT - VK_IMAGE_USAGE_STORAGE_BIT - VK_IMAGE_USAGE_TRANSFER_SRC_BIT - VK_IMAGE_USAGE_TRANSFER_DST_BIT</summary>
     public int usage;
     /// <summary>Extension data for image creation. If DRM tiling is used, a VkImageDrmFormatModifierListCreateInfoEXT structure can be added to specify the exact modifier to use.</summary>
     public void* create_pnext;
@@ -2209,6 +2265,38 @@ public unsafe struct FFFrac
     public long val;
     public long num;
     public long den;
+}
+
+public unsafe struct FFInputFormat
+{
+    /// <summary>The public AVInputFormat. See avformat.h for it.</summary>
+    public AVInputFormat p;
+    /// <summary>Raw demuxers store their codec ID here.</summary>
+    public AVCodecID raw_codec_id;
+    /// <summary>Size of private data so that it can be allocated in the wrapper.</summary>
+    public int priv_data_size;
+    /// <summary>Internal flags. See FF_INFMT_FLAG_* above and FF_FMT_FLAG_* in internal.h.</summary>
+    public int flags_internal;
+    /// <summary>Tell if a given file has a chance of being parsed as this format. The buffer provided is guaranteed to be AVPROBE_PADDING_SIZE bytes big so you do not have to check for that unless you need more.</summary>
+    public FFInputFormat_read_probe_func read_probe;
+    /// <summary>Read the format header and initialize the AVFormatContext structure. Return 0 if OK. &apos;avformat_new_stream&apos; should be called to create new streams.</summary>
+    public FFInputFormat_read_header_func read_header;
+    /// <summary>Read one packet and put it in &apos;pkt&apos;. pts and flags are also set. &apos;avformat_new_stream&apos; can be called only if the flag AVFMTCTX_NOHEADER is used and only in the calling thread (not in a background thread).</summary>
+    public FFInputFormat_read_packet_func read_packet;
+    /// <summary>Close the stream. The AVFormatContext and AVStreams are not freed by this function</summary>
+    public FFInputFormat_read_close_func read_close;
+    /// <summary>Seek to a given timestamp relative to the frames in stream component stream_index.</summary>
+    public FFInputFormat_read_seek_func read_seek;
+    /// <summary>Get the next timestamp in stream[stream_index].time_base units.</summary>
+    public FFInputFormat_read_timestamp_func read_timestamp;
+    /// <summary>Start/resume playing - only meaningful if using a network-based format (RTSP).</summary>
+    public FFInputFormat_read_play_func read_play;
+    /// <summary>Pause playing - only meaningful if using a network-based format (RTSP).</summary>
+    public FFInputFormat_read_pause_func read_pause;
+    /// <summary>Seek to timestamp ts. Seeking will be done so that the point from which all active streams can be presented successfully will be closest to ts and within min/max_ts. Active streams are all streams that have AVStream.discard &lt; AVDISCARD_ALL.</summary>
+    public FFInputFormat_read_seek2_func read_seek2;
+    /// <summary>Returns device list with it properties.</summary>
+    public FFInputFormat_get_device_list_func get_device_list;
 }
 
 public unsafe struct FFIOContext
@@ -2324,6 +2412,26 @@ public unsafe struct FFStream_extract_extradata
     public int inited;
 }
 
+public unsafe struct FFStreamInfo
+{
+    public long last_dts;
+    public long duration_gcd;
+    public int duration_count;
+    public long rfps_duration_sum;
+    public double_array2x399* duration_error;
+    public long codec_info_duration;
+    public long codec_info_duration_fields;
+    public int frame_delay_evidence;
+    /// <summary>0 -&gt; decoder has not been searched for yet. &gt;0 -&gt; decoder found &lt;0 -&gt; decoder with codec_id == -found_decoder has not been found</summary>
+    public int found_decoder;
+    public long last_duration;
+    /// <summary>Those are used for average framerate estimation.</summary>
+    public long fps_first_dts;
+    public int fps_first_dts_idx;
+    public long fps_last_dts;
+    public int fps_last_dts_idx;
+}
+
 /// <summary>Link properties exposed to filter code, but not external callers.</summary>
 public unsafe struct FilterLink
 {
@@ -2359,7 +2467,7 @@ public unsafe struct HLSAudioSetupInfo
     public ushort priming;
     public byte version;
     public byte setup_data_length;
-    public byte_array10 setup_data;
+    public byte_array74 setup_data;
 }
 
 public unsafe struct HLSContext

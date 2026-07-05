@@ -2,7 +2,8 @@
 
 public unsafe abstract class BufferSource : FilterContext
 {
-    public int FailedRequests => (int)av_buffersrc_get_nb_failed_requests(_ptr);
+    public int  FailedRequests  => (int)av_buffersrc_get_nb_failed_requests(_ptr);
+    public bool IsEof           => av_buffersrc_get_status(_ptr) == AVERROR_EOF;
 
     protected BufferSource(FilterGraph graph, string filterName, bool initialize, string? name, BufferSourceParams? param = null) : base(graph, filterName, false, name)
     {

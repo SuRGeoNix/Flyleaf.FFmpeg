@@ -2,6 +2,8 @@
 
 public unsafe static partial class Utils
 {
+    // TBR: av_packet_side_data_from_frame / av_packet_side_data_to_frame (packet / frame side data objects to each other)
+
     internal static void SideDataCopy(AVPacketSideData* src, int srcCount, AVPacketSideData** dstPtr, int* dstCount)
     {
         if (srcCount <= 0)

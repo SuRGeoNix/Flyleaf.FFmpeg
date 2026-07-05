@@ -49,9 +49,12 @@ public unsafe class ImageConverter : IDisposable
     public int Convert(VideoFrameBase src, VideoFrameBase dst)
         => sws_scale_frame(ctx, dst, src);
 
+    public static bool IsSupportedHWFormat(AVPixelFormat format) // currently only for Vulkan?
+        => sws_test_hw_format(format) > 0;
+
     public static bool IsSupportedForInput(AVPixelFormat format)
-        => sws_isSupportedInput(format) > 0
-        ;
+        => sws_isSupportedInput(format) > 0;
+
     public static bool IsSupportedForOutput(AVPixelFormat format)
         => sws_isSupportedOutput(format) > 0;
 

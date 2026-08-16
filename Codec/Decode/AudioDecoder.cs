@@ -54,7 +54,6 @@ public unsafe class AudioDecoder : AVDecoder
 
     public FFmpegClass          AVClass                 => FFmpegClass.Get(_ptr, DA)!;
     //public FFmpegClass?         AVClassPrivate          => FFmpegClass.Get(_ptr->priv_data, DA);
-    public CodecPropertyFlags   Properties              => _ptr->properties;
     public ThreadTypeFlags      ActiveThreadType        => _ptr->active_thread_type;
     public long                 FrameNumber             => _ptr->frame_num;
     public int                  FrameSize               => _ptr->frame_size; // may be set by some decoders to indicate constant frame size

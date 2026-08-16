@@ -38,6 +38,7 @@ public unsafe class AudioEncoder : AVEncoder
 
     // == E A ==
     public AudioEncoderFlags    Flags                   { get => (AudioEncoderFlags)_ptr->flags;    set => _ptr->flags = (CodecFlags)value; }
+    public AudioEncoderFlags2   Flags2                  { get => (AudioEncoderFlags2)_ptr->flags2;  set => _ptr->flags2 = (CodecFlags2)value; }
     public AVAudioServiceType   AudioServiceType        { get => _ptr->audio_service_type;          set => _ptr->audio_service_type = value; }
     public VASEncoderExportDataFlags
                                 ExportSideDataFlags     { get => (VASEncoderExportDataFlags)_ptr->export_side_data;

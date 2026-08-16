@@ -25,6 +25,6 @@ public unsafe class MediaProgramMux
         _ptr    = muxer.NewProgram(progId);
     }
 
-    public void AddStream(MediaStreamMux stream)
+    public FFmpegResult AddStream(MediaStreamMux stream)
         => Muxer.AddStreamToProgram(stream._ptr, _ptr);
 }

@@ -14,7 +14,6 @@ public unsafe class FilterContext
     public FilterSpec           Filter              { get; }
 
     public string?              Name                => GetString(_ptr->name);
-    public uint                 Ready               => _ptr->ready;
 
     // inputs / outputs links under inpads/outpads
     public ReadOnlyCollection<FilterPadIn>

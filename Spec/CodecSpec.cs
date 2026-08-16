@@ -33,17 +33,31 @@ public unsafe abstract partial class CodecSpec
 
 public unsafe class AudioCodecSpec : CodecSpec
 {
-    public List<AVChannelLayout>    ChannelLayouts  { get; }
-    public List<AVSampleFormat>     SampleFormats   { get; }
-    public List<int>                SampleRates     { get; }
+    public ReadOnlySpan<AVChannelLayout>    ChannelLayouts  => new(channelLayouts, channelLayoutsCount);
+    readonly AVChannelLayout* channelLayouts;
+    readonly int channelLayoutsCount;
+
+    public ReadOnlySpan<AVSampleFormat>     SampleFormats   => new(sampleFormats, sampleFormatsCount);
+    readonly AVSampleFormat* sampleFormats;
+    readonly int sampleFormatsCount;
+
+    public ReadOnlySpan<int>                SampleRates     => new(sampleRates, sampleRatesCount);
+    readonly int* sampleRates;
+    readonly int sampleRatesCount;
 
     internal AudioCodecSpec(AVCodec* codec) : base(codec)
     {
-        // TODO: (AccessViolation) AVChannelLayout** test = null; int ret = 0; var res = avcodec_get_supported_config(null, _ptr, AVCodecConfig.ChannelLayout, 0, (void**)test, &ret);
-        
-        ChannelLayouts  = GetChannelLayouts(codec->ch_layouts);
-        SampleFormats   = GetSampleFormats(codec->sample_fmts);
-        SampleRates     = GetSampleRates(codec->supported_samplerates);
+        fixed(AVChannelLayout** ptr1 = &channelLayouts)
+            fixed(int* ptr2 = &channelLayoutsCount)
+                _ = avcodec_get_supported_config(null, _ptr, AVCodecConfig.ChannelLayout, 0, (void**)ptr1, ptr2);
+
+        fixed(AVSampleFormat** ptr1 = &sampleFormats)
+            fixed(int* ptr2 = &sampleFormatsCount)
+                _ = avcodec_get_supported_config(null, _ptr, AVCodecConfig.SampleFormat, 0, (void**)ptr1, ptr2);
+
+        fixed(int** ptr1 = &sampleRates)
+            fixed(int* ptr2 = &sampleRatesCount)
+                _ = avcodec_get_supported_config(null, _ptr, AVCodecConfig.SampleRate, 0, (void**)ptr1, ptr2);
     }
 }
 
@@ -67,10 +81,16 @@ public unsafe sealed class AudioEncoderSpec : AudioCodecSpec
 
 public unsafe class VideoCodecSpec : CodecSpec
 {
-    public List<AVRational>         FrameRates      { get; }
+    public ReadOnlySpan<AVRational> FrameRates  => new(frameRates, frameRatesCount);
+    readonly AVRational* frameRates;
+    readonly int frameRatesCount;
 
     internal VideoCodecSpec(AVCodec* codec) : base(codec)
-        => FrameRates = GetFrameRates(codec->supported_framerates);
+    {
+        fixed(AVRational** ptr1 = &frameRates)
+            fixed(int* ptr2 = &frameRatesCount)
+                _ = avcodec_get_supported_config(null, _ptr, AVCodecConfig.FrameRate, 0, (void**)ptr1, ptr2);
+    }
 }
 
 public unsafe sealed class VideoDecoderSpec : VideoCodecSpec
@@ -113,14 +133,28 @@ public unsafe sealed class VideoDecoderSpec : VideoCodecSpec
 
 public unsafe sealed class VideoEncoderSpec : VideoCodecSpec
 {
-    public List<AVCodecHWConfig>    HWConfigs       { get; }
-    public HWWrapper                HWWrapper       { get; }
-    public List<AVPixelFormat>      PixelFormats    { get; }
+    public List<AVCodecHWConfig>        HWConfigs       { get; }
+    public HWWrapper                    HWWrapper       { get; }
+    
+    public ReadOnlySpan<AVAlphaMode>    AlphaModes      => new(alphaModes, alphaModesCount);
+    readonly AVAlphaMode* alphaModes;
+    readonly int alphaModesCount;
+
+    public ReadOnlySpan<AVPixelFormat>  PixelFormats    => new(pixelFormats, pixelFormatsCount);
+    readonly AVPixelFormat* pixelFormats;
+    readonly int pixelFormatsCount;
 
     internal VideoEncoderSpec(AVCodec* codec) : base(codec) 
     {
+        fixed(AVAlphaMode** ptr1 = &alphaModes)
+            fixed(int* ptr2 = &alphaModesCount)
+                _ = avcodec_get_supported_config(null, _ptr, AVCodecConfig.AlphaMode, 0, (void**)ptr1, ptr2);
+
+        fixed(AVPixelFormat** ptr1 = &pixelFormats)
+            fixed(int* ptr2 = &pixelFormatsCount)
+                _ = avcodec_get_supported_config(null, _ptr, AVCodecConfig.PixFormat, 0, (void**)ptr1, ptr2);
+
         HWConfigs   = GetHWConfigs(codec);
-        PixelFormats= GetPixelFormats(codec->pix_fmts); // Encoder only
 
         AddToDicList(VideoEncodersById, codec->id, this);
         VideoEncoderByName.Add(Name, this);

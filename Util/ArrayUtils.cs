@@ -97,6 +97,20 @@ public unsafe static class ArrayUtils
         return list;
     }
 
+    public static List<AVAlphaMode> GetAlphaModes(AVAlphaMode* alphaModes)
+    {
+        List<AVAlphaMode> list = [];
+
+        if (alphaModes != null)
+        {
+            int i = 0;
+            while (alphaModes[i] != AVAlphaMode.Unspecified)
+                list.Add(alphaModes[i++]);
+        }
+
+        return list;
+    }
+
     public static List<CodecProfile> GetProfiles(AVProfile* profile)
     {
         List<CodecProfile> list = [];

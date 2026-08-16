@@ -133,6 +133,9 @@ public unsafe class Muxer : FormatContext
     public FFmpegResult WriteUncodedFrameQuery(int streamIndex)
         => new(av_write_uncoded_frame_query(_ptr, streamIndex));
 
+    public FFmpegResult ProgramCopy(FormatContext src, int id, FmtProgCopyFlags flags = FmtProgCopyFlags.None)
+        => new(av_program_copy(_ptr, src, id, flags));
+
     public (bool success, long dts, long wall) GetOutputTimestamp(int streamIndex)
     {
         long dts, wall;
@@ -159,7 +162,7 @@ public unsafe class Muxer : FormatContext
         programs.Add(new(this, prog));
         return prog;
     }
-    
+
     internal AVStreamGroup* NewStreamGroup(AVStreamGroupParamsType type, Dictionary<string, string>? opts = null)
     {
         var avopts = AVDictFromDict(opts);
@@ -171,24 +174,29 @@ public unsafe class Muxer : FormatContext
         return group;
     }
 
-    internal void AddStreamToProgram(AVStream* stream, AVProgram* prog)
+    internal FFmpegResult AddStreamToProgram(AVStream* stream, AVProgram* prog)
     {
-        Demux.MediaProgram? existing = null;
+        FFmpegResult ret;
+        
+        ret = new(av_program_add_stream_index2(_ptr, prog->id, (uint)stream->index));
+        if (ret.Failed)
+            return ret;
+
         for (int i = 0; i < programs.Count; i++)
             if (programs[i].Id == prog->id)
-                { existing = programs[i]; break; }
+            {
+                programs[i].streams.Add(streams[stream->index]);
+                streams[stream->index].programs.Add(programs[i]);
 
-        if (existing == null)
-            return;
+                return ret;
+            }
 
-        av_program_add_stream_index(_ptr, prog->id, (uint)stream->index);
-        existing.streams.Add(streams[stream->index]);
-        streams[stream->index].programs.Add(existing);
+        return ret;
     }
 
     internal void AddStreamToStreamGroup(AVStream* stream, AVStreamGroup* group)
     {
-        Demux.StreamGroup? existing = null;
+        StreamGroup? existing = null;
         for (int i = 0; i < streamGroups.Count; i++)
             if (streamGroups[i]._ptr == group)
                 { existing = streamGroups[i]; break; }

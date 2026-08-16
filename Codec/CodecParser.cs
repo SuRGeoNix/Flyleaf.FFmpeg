@@ -58,7 +58,7 @@ public unsafe class CodecParserBase
         => _ptr = ptr;
 
     public CodecParserBase(AVCodecID codecId)
-        => _ptr = av_parser_init((int)codecId);
+        => _ptr = av_parser_init(codecId);
 
     public int Parse(AVCodecContext* decoder, byte* srcData, int srcSize, byte** dstData, int* dstSize, long dts = NoTs, long pts = NoTs, long pos = 0)
         => av_parser_parse2(_ptr, decoder, dstData, dstSize, srcData, srcSize, pts, dts, pos);

@@ -54,7 +54,6 @@ public unsafe class VideoDecoder : AVDecoder
 
     public FFmpegClass          AVClass                 => FFmpegClass.Get(_ptr, DV)!;
     //public FFmpegClass?         AVClassPrivate          => FFmpegClass.Get(_ptr->priv_data, DV); // not safe
-    public CodecPropertyFlags   Properties              => _ptr->properties;
     public ThreadTypeFlags      ActiveThreadType        => _ptr->active_thread_type;
     public int                  Delay                   => _ptr->delay;
     public int                  VideoDelay              => _ptr->has_b_frames;

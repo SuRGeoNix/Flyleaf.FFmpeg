@@ -44,12 +44,12 @@ public unsafe class AudioEncoder : AVEncoder
                                                                                                     set => _ptr->export_side_data = (CodecExportDataFlags)value; }
     public int                  CutOff                  { get => _ptr->cutoff;                      set => _ptr->cutoff = value; }
 
-    // XX A?
-    //public int                  BlockAlign          { get => ctx->block_align;                  set => ctx->block_align = value; }
-    //public int                  TrailPad            { get => ctx->trailing_padding;             set => ctx->trailing_padding = value; } // ED not used?
-
     // E A
-    //public int                  SeekPreRoll         { get => ctx->seek_preroll;                 set => ctx->seek_preroll = value; } // suppose to be ro for encoding but avcodec does not currently use this
+    public int                  FrameSize               { get => _ptr->frame_size;                  set => _ptr->frame_size = value; } // may then overwrite it
+
+    // XX A?
+    //public int                  BlockAlign          { get => _ptr->block_align;                  set => _ptr->block_align = value; }
+    //public int                  TrailPad            { get => _ptr->trailing_padding;             set => _ptr->trailing_padding = value; } // ED not used?
     #endregion
 
     public FFmpegClass          AVClass                 => FFmpegClass.Get(_ptr, EA)!;
@@ -57,9 +57,12 @@ public unsafe class AudioEncoder : AVEncoder
     public ThreadTypeFlags      ActiveThreadType        => _ptr->active_thread_type;
     public long                 FrameNumber             => _ptr->frame_num;
     public int                  BitsPerCodedSample      => _ptr->bits_per_coded_sample;
-    public int                  FrameSize               => _ptr->frame_size;
-    public int                  InitPad                 => _ptr->initial_padding;
     public int                  BlockAlign              => _ptr->block_align; // TBR: if possible to set manually to the encoder?
+
+    public int                  InitPad                 => _ptr->initial_padding;
+    //public int                  SeekPreRoll             => _ptr->seek_preroll; // Muxer sets this?
+    //public int                  TrailPad                => _ptr->trailing_padding; // probably communicate via AV_PKT_DATA_SKIP_SAMPLES instead
+
     public AudioEncoderSpec     CodecSpec               { get; }
 
     public AudioEncoder(AudioEncoderSpec codec) : base(codec) { CodecSpec = codec; }

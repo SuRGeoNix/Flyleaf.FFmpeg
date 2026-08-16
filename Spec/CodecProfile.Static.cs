@@ -12,6 +12,9 @@ public unsafe sealed partial class CodecProfile
         return PROFILE_UNKNOWN.Name;
     }
 
+    public static CodecProfile GetProfile(CodecDescriptor? codecDescriptor, int profile)
+        => codecDescriptor == null ? PROFILE_UNKNOWN : GetProfile(codecDescriptor.Profiles, profile);
+
     public static CodecProfile GetProfile(List<CodecProfile> profiles, int profile)
     {
         if (profile != AV_PROFILE_UNKNOWN)

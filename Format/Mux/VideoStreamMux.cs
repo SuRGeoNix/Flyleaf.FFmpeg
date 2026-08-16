@@ -4,9 +4,11 @@ namespace Flyleaf.FFmpeg.Format.Mux;
 
 public unsafe class VideoStreamMux : MediaStreamMux
 {
+    public FFmpegClass          AVClass             => FFmpegClass.Get(_ptr, EV)!;
+
     // TBR: Seems VA only
     public int                  Level               { get => _codecpar->level;                  set => _codecpar->level = value; }
-    public CodecProfile         CodecProfile        { get => CodecDescriptor == null ? PROFILE_UNKNOWN : GetProfile(CodecDescriptor.Profiles, _codecpar->profile); set => _codecpar->profile = value.Profile; }
+    public CodecProfile         CodecProfile        { get => GetProfile(CodecDescriptor, _codecpar->profile); set => _codecpar->profile = value.Profile; }
 
     public AVRational           AvgFrameRate        { get => _ptr->avg_frame_rate;              set => _ptr->avg_frame_rate = value; }
     
@@ -27,7 +29,6 @@ public unsafe class VideoStreamMux : MediaStreamMux
     public int                  Height              { get => _codecpar->height;                 set => _codecpar->height = value; }
     public int                  Width               { get => _codecpar->width;                  set => _codecpar->width = value; }
 
-    public FFmpegClass          AVClass             => FFmpegClass.Get(_ptr, EV)!;
     public AVRational           FrameRate           => _codecpar->framerate; // maybe hide ro (any reason to show for mux?)
     public AVRational           RealFrameRate       => _ptr->r_frame_rate;
 

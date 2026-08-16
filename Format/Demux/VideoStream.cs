@@ -2,8 +2,10 @@
 
 public unsafe class VideoStream : MediaStream
 {
+    public FFmpegClass          AVClass             => FFmpegClass.Get(_ptr, DV)!;
+
     public int                  Level               => _codecpar->level;
-    public CodecProfile         CodecProfile        => CodecDescriptor == null ? PROFILE_UNKNOWN : GetProfile(CodecDescriptor.Profiles, _codecpar->profile);
+    public CodecProfile         CodecProfile        => GetProfile(CodecDescriptor, _codecpar->profile);
 
     public AVRational           AvgFrameRate        => _ptr->avg_frame_rate;
     public AVRational           FrameRate           => _codecpar->framerate;
@@ -30,14 +32,12 @@ public unsafe class VideoStream : MediaStream
     public int                  Height              => _codecpar->height;
     public int                  Width               => _codecpar->width;
 
-    public FFmpegClass          AVClass             => FFmpegClass.Get(_ptr, DV)!;
-
     public double GetRotation()
     {
-        if ( _ptr->codecpar->nb_coded_side_data == 0)
+        if ( _codecpar->nb_coded_side_data == 0)
             return 0;
 
-        AVPacketSideData* displayMatrixPtr = av_packet_side_data_get(_ptr->codecpar->coded_side_data, _ptr->codecpar->nb_coded_side_data, AVPacketSideDataType.Displaymatrix);
+        AVPacketSideData* displayMatrixPtr = av_packet_side_data_get(_codecpar->coded_side_data, _codecpar->nb_coded_side_data, AVPacketSideDataType.Displaymatrix);
         if (displayMatrixPtr == null || displayMatrixPtr->data == null)
             return 0;
         

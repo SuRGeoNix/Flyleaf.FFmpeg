@@ -2,43 +2,54 @@
 
 public unsafe class AudioDecoder : AVDecoder
 {
+    /* TODO
+
+    - Decoding warm-up | Start/End of decoding need to skip samples + Seek needs negative offset and skip samples too
+
+    Start of stream:
+        InitialPadding
+
+    Middle (seek/discontinuity):
+        SeekPreroll (e.g. Opus 80ms) + DecoderDelay or Max of them?* (safest to use Max*)
+
+    End of stream:
+        TrailingPadding (probably via sida data of last packet instead AV_PKT_DATA_SKIP_SAMPLES)
+     */
+
     #region Configuration Properties (RW)
     // ED VAS
     //public string?              DumpSeperator           { get => PtrToStr(ctx->dump_separator); set => av_strdup(value); }
-    public ErrorDetectFlags     ErrorDetectFlags        { get => _ptr->err_recognition;              set => _ptr->err_recognition = value; }
+    public ErrorDetectFlags     ErrorDetectFlags        { get => _ptr->err_recognition;             set => _ptr->err_recognition = value; }
     //public long                 MaxPixels           { get => ctx->max_pixels;                   set => ctx->max_pixels = value; } // video/subs*
 
     // ED VA (no S?)
-    public long                 BitRate                 { get => _ptr->bit_rate;                     set => _ptr->bit_rate = value; } // (might overwritten) seems possible to set also for the decoder?
+    public long                 BitRate                 { get => _ptr->bit_rate;                    set => _ptr->bit_rate = value; } // (might overwritten) seems possible to set also for the decoder?
     public CodecProfile         CodecProfile            { get => GetProfile(CodecSpec.Profiles, _ptr->profile); set => _ptr->profile = value.Profile; }
-    public int                  Level                   { get => _ptr->level;                        set => _ptr->level = value; }
+    public int                  Level                   { get => _ptr->level;                       set => _ptr->level = value; }
 
     // ED VA 
-    public StrictCompliance     StrictCompliance        { get => _ptr->strict_std_compliance;        set => _ptr->strict_std_compliance = value; }
-    public int                  Threads                 { get => _ptr->thread_count;                 set => _ptr->thread_count = value; }
+    public StrictCompliance     StrictCompliance        { get => _ptr->strict_std_compliance;       set => _ptr->strict_std_compliance = value; }
+    public int                  Threads                 { get => _ptr->thread_count;                set => _ptr->thread_count = value; }
 
     // D VAS
-    public int                  BitsPerCodedSample      { get => _ptr->bits_per_coded_sample;        set => _ptr->bits_per_coded_sample = value; }
+    public int                  BitsPerCodedSample      { get => _ptr->bits_per_coded_sample;       set => _ptr->bits_per_coded_sample = value; }
     //public AVRational           PacketTimebase      { get => ctx->pkt_timebase;                 set => ctx->pkt_timebase = value; } // timebase for decoding is unused might use timebase prop name for this?
     //TODO side_data_prefer_packet
 
     // ED A
-    public int                  SampleRate              { get => _ptr->sample_rate;                  set => _ptr->sample_rate = value; }
-    public AVChannelLayout      ChannelLayout           { get => _ptr->ch_layout;                    set => _ = av_channel_layout_copy(&_ptr->ch_layout, &value); } // frees prev
-    public long                 MaxSamples              { get => _ptr->max_samples;                  set => _ptr->max_samples = value; }
-
-    // == D A ==
-    public AudioDecoderFlags    Flags                   { get => (AudioDecoderFlags)_ptr->flags;     set => _ptr->flags = (CodecFlags)value; }
-    public AudioDecoderFlags2   Flags2                  { get => (AudioDecoderFlags2)_ptr->flags2;   set => _ptr->flags2 = (CodecFlags2)value; }
-    public AVSampleFormat       RequestSampleFormat     { get => _ptr->request_sample_fmt;           set => _ptr->request_sample_fmt = value; }
-
-    // XX A?
-    public int                  BlockAlign              { get => _ptr->block_align;                  set => _ptr->block_align = value; } // TBR: might read-only?
-    //public int                  TrailPad            { get => ctx->trailing_padding;             set => ctx->trailing_padding = value; } // ED not used?
-    public int                  FrameSize               { get => _ptr->frame_size;                   set => _ptr->frame_size = value; } // make sure you have this also for audio encoder (read-only)
+    public int                  SampleRate              { get => _ptr->sample_rate;                 set => _ptr->sample_rate = value; }
+    public AVChannelLayout      ChannelLayout           { get => _ptr->ch_layout;                   set => _ = av_channel_layout_copy(&_ptr->ch_layout, &value); } // frees prev
+    public long                 MaxSamples              { get => _ptr->max_samples;                 set => _ptr->max_samples = value; }
 
     // D A
-    public int                  InitPad                 { get => _ptr->delay;                        set => _ptr->delay = value; } // set by encoder / set to the decoder as delay instead*
+    public AudioDecoderFlags    Flags                   { get => (AudioDecoderFlags)_ptr->flags;    set => _ptr->flags = (CodecFlags)value; }
+    public AudioDecoderFlags2   Flags2                  { get => (AudioDecoderFlags2)_ptr->flags2;  set => _ptr->flags2 = (CodecFlags2)value; }
+    public AVSampleFormat       RequestSampleFormat     { get => _ptr->request_sample_fmt;          set => _ptr->request_sample_fmt = value; }
+
+    // XX A?
+    public int                  BlockAlign              { get => _ptr->block_align;                 set => _ptr->block_align = value; } // TBR: might read-only?
+    //public int                  TrailPad            { get => ctx->trailing_padding;             set => ctx->trailing_padding = value; } // ED not used?
+    //public int                  FrameSize               { get => _ptr->frame_size;                  set => _ptr->frame_size = value; } // make sure you have this also for audio encoder (read-only)
     #endregion
 
     public FFmpegClass          AVClass                 => FFmpegClass.Get(_ptr, DA)!;
@@ -46,7 +57,9 @@ public unsafe class AudioDecoder : AVDecoder
     public CodecPropertyFlags   Properties              => _ptr->properties;
     public ThreadTypeFlags      ActiveThreadType        => _ptr->active_thread_type;
     public long                 FrameNumber             => _ptr->frame_num;
+    public int                  FrameSize               => _ptr->frame_size; // may be set by some decoders to indicate constant frame size
     public int                  BitsPerRawSample        => _ptr->bits_per_raw_sample;
+    public int                  Delay                   => _ptr->delay; // samples before decoding properly after seek (same as seek preroll or +extra?)
     public AVSampleFormat       SampleFormat            => _ptr->sample_fmt; // we can set requested / encoders rw
     public AudioDecoderSpec     CodecSpec               { get; }
     
@@ -73,11 +86,11 @@ public unsafe class AudioDecoder : AVDecoder
         BitsPerCodedSample  = stream.BitsPerCodedSample;
 
         BlockAlign          = stream.BlockAlign;
-        RequestSampleFormat = stream.SampleFormat; // ffmpeg uses SampleFormat not Requested
-        FrameSize           = stream.FrameSize;
+        //FrameSize           = stream.FrameSize;
         SampleRate          = stream.SampleRate;
-        InitPad             = stream.InitPad;
+        //InitPad             = stream.InitPad;
         ChannelLayout       = stream.ChannelLayout;
+        // SampleFormat no reason to set this | RequestSampleFormat try to avoid forcing decoder to specific output
 
         stream.ExtraDataCopyTo(&_ptr->extradata, &_ptr->extradata_size);
         stream.SideDataCopyTo(&_ptr->coded_side_data, &_ptr->nb_coded_side_data);

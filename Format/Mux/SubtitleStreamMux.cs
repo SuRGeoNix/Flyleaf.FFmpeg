@@ -4,11 +4,12 @@ namespace Flyleaf.FFmpeg.Format.Mux;
 
 public unsafe class SubtitleStreamMux : MediaStreamMux
 {
-    public CodecProfile         CodecProfile        { get => CodecDescriptor == null ? PROFILE_UNKNOWN : GetProfile(CodecDescriptor.Profiles, _codecpar->profile); set => _codecpar->profile = value.Profile; }
+    public FFmpegClass          AVClass             => FFmpegClass.Get(_ptr, ES)!;
+
+    public CodecProfile         CodecProfile        { get => GetProfile(CodecDescriptor, _codecpar->profile); set => _codecpar->profile = value.Profile; }
+
     public int                  Height              { get => _codecpar->height;  set => _codecpar->height = value; }
     public int                  Width               { get => _codecpar->width;   set => _codecpar->width = value; }
-
-    public FFmpegClass          AVClass             => FFmpegClass.Get(_ptr, ES)!;
 
     public SubtitleStreamMux(Muxer muxer, AVCodecID codecId) : base(muxer, AVMediaType.Subtitle, codecId) { }
     public SubtitleStreamMux(Muxer muxer, SubtitleStream stream, AVCodecID forceCodecId = AVCodecID.None) : base(muxer, AVMediaType.Subtitle, forceCodecId != AVCodecID.None ? forceCodecId : stream.CodecId) // TBR

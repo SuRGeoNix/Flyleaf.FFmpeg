@@ -4,69 +4,130 @@ public unsafe static partial class Utils
 {
     // TBR: av_packet_side_data_from_frame / av_packet_side_data_to_frame (packet / frame side data objects to each other)
 
-    internal static void SideDataCopy(AVPacketSideData* src, int srcCount, AVPacketSideData** dstPtr, int* dstCount)
+    public static void SideDataCopy(AVPacketSideData* src, int srcCount, AVPacketSideData** dstPtr, int* dstCount)
     {
+        if (*dstPtr != null)
+            av_packet_side_data_free(dstPtr, dstCount);
+
         if (srcCount <= 0)
             return;
 
-        AVPacketSideData* dst = (AVPacketSideData*) av_calloc((nuint)srcCount, (nuint)sizeof(nint));
+        var dst = (AVPacketSideData*) av_calloc((nuint)srcCount, (nuint)sizeof(AVPacketSideData));
+
+        if (dst == null)
+            return;
 
         for (int i = 0; i < srcCount; i++)
         {
-            var cursrc = src[i];
-            var curdst = &dst[i];
-            curdst->data = (byte*) av_memdup(cursrc.data, cursrc.size); // should benchmark av_memdup with Span.CopyTo
-            curdst->size = cursrc.size;
-            curdst->type = cursrc.type;
+            var srcCur = &src[i];
+            var dstCur = &dst[i];
+            
+            dstCur->type = srcCur->type;
+            if (srcCur->data != null && srcCur->size > 0)
+            {
+                dstCur->size = srcCur->size;
+                dstCur->data = (byte*) av_memdup(srcCur->data, srcCur->size);
+            }
         }
+
+        *dstPtr     = dst;
+        *dstCount   = srcCount;
     }
 
-    internal static FFmpegResult SideDataCopy(AVFrameSideData** src, int srcCount, AVFrameSideData*** dstPtr, int* dstCount, FrameSideDataFlags flags = FrameSideDataFlags.None)
+    public static void SideDataCopy(List<PacketSideDataEntry> src, AVPacketSideData** dstPtr, int* dstCount)
+    {
+        if (*dstPtr != null)
+            av_packet_side_data_free(dstPtr, dstCount);
+
+        if (src.Count <= 0)
+            return;
+
+        var dst = (AVPacketSideData*) av_calloc((nuint)src.Count, (nuint)sizeof(AVPacketSideData));
+
+        if (dst == null)
+            return;
+
+        for (int i = 0; i < src.Count; i++)
+        {
+            var srcCur = src[i];
+            var dstCur = &dst[i];
+            
+            dstCur->type = srcCur.Type;
+            if (srcCur.Data.Length > 0)
+            {
+                dstCur->size = (nuint)srcCur.Data.Length;
+                fixed(byte* ptr = srcCur.Data)
+                    dstCur->data = (byte*) av_memdup(ptr, dstCur->size);
+            }
+        }
+
+        *dstPtr     = dst;
+        *dstCount   = src.Count;
+    }
+
+    public static List<PacketSideDataEntry> SideDataGet(AVPacketSideData* src, int srcCount)
+    {
+        var data = new List<PacketSideDataEntry>(srcCount);
+
+        for (int i = 0; i < srcCount; i++)
+        {
+            var srcCur = &src[i];
+
+            data.Add(new()
+            {
+                Type = srcCur->type,
+                Data = srcCur->size > int.MaxValue || srcCur->size == 0 || srcCur->data == null ? [] : new ReadOnlySpan<byte>(srcCur->data, (int)srcCur->size).ToArray()
+            });
+        }
+        
+        return data;
+    }
+
+    public static FFmpegResult SideDataCopy(AVFrameSideData** src, int srcCount, AVFrameSideData*** dstPtr, int* dstCount, FrameSideDataFlags flags = FrameSideDataFlags.None)
     {
         // Posible get side data descriptor and check props (eg. global)
         FFmpegResult ret;
         for (int i = 0; i < srcCount; i++)
             if (!(ret = new(av_frame_side_data_clone(dstPtr, dstCount, src[i], (uint)flags))).Success)
                 return ret;
-
+        
         return FFmpegResult.Default;
     }
 
     public static FFmpegResult FrameSideDataCloneEntry(AVFrameSideData* srcEntry, AVFrameSideData*** dstPtr, int* dstCount, FrameSideDataFlags flags = FrameSideDataFlags.None)
         => new(av_frame_side_data_clone(dstPtr, dstCount, srcEntry, (uint)flags));
 
-    internal static void ExtraDataCopy(byte* src, int srcSize, byte** dstPtr, int* dstSize)
+    public static void ExtraDataCopy(byte* src, int srcSize, byte** dstPtr, int* dstSize)
     {
         if (*dstPtr != null)
-            av_free(*dstPtr);
+            av_freep(dstPtr);
 
-        *dstSize    = srcSize;
-
-        if (srcSize <= 0)
+        if (src == null || srcSize <= 0)
+        {
+            *dstSize = 0;
             return;
+        }
 
-        *dstPtr     = (byte*) av_mallocz((nuint)(srcSize + AV_INPUT_BUFFER_PADDING_SIZE));
-        var srcSpan = new ReadOnlySpan<byte>(src, srcSize);
-        var dstSpan = new Span<byte>(*dstPtr, srcSize);
-        srcSpan.CopyTo(dstSpan);
+        *dstPtr = (byte*) av_mallocz((nuint)srcSize + AV_INPUT_BUFFER_PADDING_SIZE);
+        new ReadOnlySpan<byte>(src, srcSize).CopyTo(new Span<byte>(*dstPtr, srcSize));
+        *dstSize = srcSize;
     }
 
-    internal static void HeaderDataCopy(byte* src, int srcSize, byte** dstPtr, int* dstSize)
-    {
-        // TBR: currently ensures we write even 0 size (1 byte null terminated)
-
+    public static void HeaderDataCopy(byte* src, int srcSize, byte** dstPtr, int* dstSize)
+    {   // TBR: null terminated extra byte (required by ASS?)
         if (*dstPtr != null)
-            av_free(*dstPtr);
+            av_freep(dstPtr);
 
-        *dstPtr     = (byte*) av_mallocz((nuint)(srcSize + 1)); /* ASS code assumes this buffer is null terminated so add extra byte. */
-        *dstSize    = srcSize;
-
-        if (srcSize <= 0)
+        if (src == null || srcSize <= 0)
+        {
+            *dstSize = 0;
+            *dstPtr = (byte*) av_mallocz(1);
             return;
-
-        var srcSpan = new ReadOnlySpan<byte>(src, srcSize);
-        var dstSpan = new Span<byte>(*dstPtr, srcSize);
-        srcSpan.CopyTo(dstSpan);
+        }
+        
+        *dstPtr = (byte*) av_mallocz((nuint)srcSize + 1);
+        new ReadOnlySpan<byte>(src, srcSize).CopyTo(new Span<byte>(*dstPtr, srcSize));
+        *dstSize = srcSize;
     }
 }
 
@@ -130,4 +191,10 @@ public unsafe class FFmpegData
             GC.SuppressFinalize(this);
         }
     }
+}
+
+public sealed class PacketSideDataEntry
+{
+    public AVPacketSideDataType Type { get; init; }
+    public byte[]               Data { get; init; } = [];
 }

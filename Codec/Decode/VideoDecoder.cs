@@ -125,10 +125,10 @@ public unsafe class VideoDecoder : AVDecoder
         //AlphaMode = stream.AlphaMode;
     }
 
-    public FFmpegResult RecvFrame(VideoFrameBase frame)
+    public FFmpegResult RecvFrame(VideoFrame frame)
         => new(avcodec_receive_frame_flags(_ptr, frame, 0));
 
-    public FFmpegResult RecvFrameSync(VideoFrameBase frame)
+    public FFmpegResult RecvFrameSync(VideoFrame frame)
         => new(avcodec_receive_frame_flags(_ptr, frame, AV_CODEC_RECEIVE_FRAME_FLAG_SYNCHRONOUS));
 
     public (int widthAligned, int heightAligned) AlignDimensions(int width, int height)
@@ -137,9 +137,9 @@ public unsafe class VideoDecoder : AVDecoder
         return (width, height);
     }
 
-    public (int widthAligned, int heightAligned) AlignDimensions(int width, int height, int_array8 linesize)
+    public (int widthAligned, int heightAligned) AlignDimensions(int width, int height, int* linesize)
     {
-        avcodec_align_dimensions2(_ptr, &width, &height, ref linesize);
+        avcodec_align_dimensions2(_ptr, &width, &height, linesize);
         return (width, height);
     }
 }

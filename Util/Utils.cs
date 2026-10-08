@@ -56,10 +56,10 @@ public unsafe static partial class Utils
         => csStr != null ? GetString(csStr)!.Split(',') : null;
 
     public static string? GetString(byte* ptr)
-        => PtrToStringUTF8((nint) ptr);
+        => Marshal.PtrToStringUTF8((nint) ptr);
     
     public static string? GetString(nint ptr)
-        => PtrToStringUTF8(ptr);
+        => Marshal.PtrToStringUTF8(ptr);
 
     public static string GetName(AVChannelLayout* chLayout)
     {

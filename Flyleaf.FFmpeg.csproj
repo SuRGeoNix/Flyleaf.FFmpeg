@@ -48,6 +48,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Flyleaf.FFmpeg.Bindings" Version="9.0.2-a1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Flyleaf.FFmpeg.ArrayUtils">
       <Static>True</Static>
     </Using>
@@ -59,6 +63,9 @@
     <Using Include="Flyleaf.FFmpeg.Format.Mux" />
     <Using Include="Flyleaf.FFmpeg.HWAccel" />
     <Using Include="Flyleaf.FFmpeg.Logging" />
+    <Using Include="Flyleaf.FFmpeg.Raw">
+      <Static>True</Static>
+    </Using>
     <Using Include="Flyleaf.FFmpeg.Spec" />
     <Using Include="Flyleaf.FFmpeg.Spec.BSFSpec">
       <Static>True</Static>
@@ -89,6 +96,8 @@
     </Using>
     <Using Include="System.Collections" />
 	<Using Include="System.Collections.ObjectModel" />
+	<Using Include="System.Runtime.CompilerServices" />
+	<Using Include="System.Runtime.InteropServices" />
   </ItemGroup>
 
 </Project>

@@ -1,45 +1,15 @@
 ﻿namespace Flyleaf.FFmpeg.Codec;
 
-//public unsafe abstract class Frame : FrameBase, IDisposable
-//{
-//    public Frame() : base() { }
-
-//    #region Disposal
-//    ~Frame()
-//    {
-//        if (!Disposed)
-//            Free();
-//    }
-
-//    public void Dispose()
-//    { 
-//        if (!Disposed)
-//        {
-//            Free();
-//            GC.SuppressFinalize(this);
-//        }
-//    }
-
-//    protected void Free()
-//    {
-//        fixed(AVFrame** _ptrPtr = &_ptr)
-//            av_frame_free(_ptrPtr);
-//    }
-//    #endregion
-//}
-
-//public unsafe abstract class FrameView(AVFrame* ptr) : FrameBase(ptr) { }
-
-public unsafe abstract class FrameBase
+public unsafe abstract class Frame : PacketFrame
 {
     // allocate/owned, dispose/unref/free
     // data, linesize, extended_data, buf/extended_buf
     // frameSideData
 
-    public long                         Pts                     { get => _ptr->pts;                    set => _ptr->pts = value; }
+    public override long                Pts                     { get => _ptr->pts;                    set => _ptr->pts = value; }
     public long                         PktDts                  { get => _ptr->pkt_dts;                set => _ptr->pkt_dts = value; }
     public long                         PtsBest                 { get => _ptr->best_effort_timestamp;  set => _ptr->best_effort_timestamp = value; }
-    public long                         Duration                { get => _ptr->duration;               set => _ptr->duration = value; }
+    public override long                Duration                { get => _ptr->duration;               set => _ptr->duration = value; }
 
     public DecodeErrorFlags             DecodeErrorFlags        { get => _ptr->decode_error_flags;     set => _ptr->decode_error_flags = value; }
     public int                          RepeatPict              { get => _ptr->repeat_pict;            set => _ptr->repeat_pict = value; } // V only?
@@ -55,20 +25,46 @@ public unsafe abstract class FrameBase
     public AVRational                   Timebase                { get => _ptr->time_base;              set => _ptr->time_base = value; } // V only (filter only?)
 
     // NOTE: for Video those should be always 4 (Extended only for Audio and linesize[0] only for Audio - for planar all must have same linesize)
-    public ref AVBufferRef_ptrArray8    BufferRefs              => ref _ptr->buf;
-    public ref byte_ptrArray8           Data                    => ref _ptr->data;
-    public ref int_array8               Linesize                => ref _ptr->linesize;
+    public ref Array8<nint>             BufferRefs              => ref _ptr->buf;
+    public ref Array8<nint>             Data                    => ref _ptr->data;
+    public ref Array8<int>              Linesize                => ref _ptr->linesize;
     
     public bool                         Disposed                => _ptr == null;
-    public readonly AVFrame* _ptr;
+    public AVFrame* _ptr;
 
-    public static implicit operator AVFrame*(FrameBase frame)
+    public static implicit operator AVFrame*(Frame frame)
         => frame._ptr;
 
-    protected FrameBase()
-        => _ptr = av_frame_alloc();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Frame()
+    {
+        var ptr = (AVFrame*)NativeMemory.AllocZeroed((nuint)sizeof(AVFrame));
+        ptr->pts                   = NoTs;
+        ptr->pkt_dts               = NoTs;
+        ptr->best_effort_timestamp = NoTs;
+        ptr->time_base.Den         = 1;
+        ptr->format                = -1;
+        ptr->extended_data         = (byte**)&ptr->data;
 
-    protected FrameBase(AVFrame* ptr)
+        _ptr = ptr;
+    }
+
+    #pragma warning disable CA1816
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override void Dispose()
+    {
+        var ptr = _ptr;
+        if (ptr == null)
+            return;
+
+        _ptr = null;
+
+        av_frame_unref(ptr);
+        NativeMemory.Free(ptr);
+    }
+    #pragma warning restore CA1816
+
+    internal Frame(AVFrame* ptr)
         => _ptr = ptr;
 
     protected FFmpegResult InitBuffer(int align = 0)
@@ -89,13 +85,13 @@ public unsafe abstract class FrameBase
     public FFmpegResult Ref(AVFrame* frame)
         => new(av_frame_ref(frame, this));
 
-    public void UnRef()
+    public override void UnRef()
         => av_frame_unref(_ptr);
 
     public string GetDump(AVRational timebase, int streamIndex, char mediaType)
         => $"[{mediaType}#{streamIndex:D2}] {GetDump(timebase)}";
 
-    public string GetDump(AVRational timebase)
+    public override string GetDump(AVRational timebase)
     {
         string? sideData = null;
 
@@ -141,7 +137,7 @@ public unsafe abstract class FrameBase
             dur = Dur = "-";
         }
         
-        return $"dts: {dts + " (" + Dts + ")",-25}, pts: {pts + " (" + Pts + ")",-25}, dur: {dur + " (" + Dur + ")",-20}, picType: {_ptr->pict_type, -8}{(flags != null ? ", flags: [" + flags + "]" : "")}{(sideData != null ? ", side: [" + sideData + "]" : "")}";
+        return $"dts: {dts + " (" + Dts + ")",-25},pts: {pts + " (" + Pts + ")",-25},dur: {dur + " (" + Dur + ")",-20},picType: {_ptr->pict_type, -4}{(flags != null ? ",flags: [" + flags + "]" : "")}{(sideData != null ? ",side: [" + sideData + "]" : "")}";
     }
 
     #region Frame Side Data

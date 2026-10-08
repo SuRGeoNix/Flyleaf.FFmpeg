@@ -16,7 +16,7 @@ public unsafe class FFmpegClassSpec
             return [];
 
         List<FFmpegClassSpec> childs = [];
-        var ChildClassIterate = GetDelegateForFunctionPointer<AVClass_child_class_iterate>(@class->child_class_iterate.Pointer); // same as av_opt_child_class_iterate
+        var ChildClassIterate = Marshal.GetDelegateForFunctionPointer<AVClass_child_class_iterate>(@class->child_class_iterate.Pointer); // same as av_opt_child_class_iterate
         void* iter = null;
         AVClass* curChild;
         while ((curChild = ChildClassIterate(&iter)) != null)

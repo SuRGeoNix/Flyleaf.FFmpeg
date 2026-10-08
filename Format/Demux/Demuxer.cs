@@ -85,8 +85,8 @@ public unsafe class Demuxer : FormatContext
     static Demuxer()
     {
         var tmpctx = avformat_alloc_context();
-        IOOpenDefaultDlgt   = GetDelegateForFunctionPointer<AVFormatContext_io_open>(tmpctx->io_open.Pointer);
-        IOCloseDefaultDlgt  = GetDelegateForFunctionPointer<AVFormatContext_io_close2>(tmpctx->io_close2.Pointer);
+        IOOpenDefaultDlgt   = Marshal.GetDelegateForFunctionPointer<AVFormatContext_io_open>(tmpctx->io_open.Pointer);
+        IOCloseDefaultDlgt  = Marshal.GetDelegateForFunctionPointer<AVFormatContext_io_close2>(tmpctx->io_close2.Pointer);
         avformat_free_context(tmpctx);
     }
     #endregion
@@ -353,7 +353,7 @@ public unsafe class Demuxer : FormatContext
     public FFmpegResult SeekFile(long ts, int streamIndex = -1, SeekFlags flags = SeekFlags.None, long minTs = long.MinValue, long maxTs = long.MaxValue)
         => new(avformat_seek_file(_ptr, streamIndex, minTs, ts, maxTs, flags));
 
-    public FFmpegResult ReadPacket(PacketBase pkt)
+    public FFmpegResult ReadPacket(Packet pkt)
         => ReadPacket(pkt._ptr);
 
     public FFmpegResult ReadPacket(AVPacket* pkt)

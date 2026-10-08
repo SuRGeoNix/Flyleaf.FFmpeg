@@ -52,11 +52,12 @@ public unsafe static class Log
         config = cfg ?? new();
 
         int maxLogLevelLength = 5;
-        foreach (LogLevel loglevel in Enum.GetValuesAsUnderlyingType(typeof(LogLevel)))
+        var loglevels = Enum.GetValuesAsUnderlyingType<LogLevel>();
+        foreach (LogLevel loglevel in loglevels)
             if (loglevel.ToString().Length > maxLogLevelLength)
                 maxLogLevelLength = loglevel.ToString().Length;
 
-        foreach (LogLevel loglevel in Enum.GetValuesAsUnderlyingType(typeof(LogLevel)))
+        foreach (LogLevel loglevel in loglevels)
             logLevels.Add(loglevel, " | " + loglevel.ToString().PadRight(maxLogLevelLength) + " | ");
 
         if (config.EnabledModules != "")
@@ -93,7 +94,7 @@ public unsafe static class Log
         fixed (int* ptr = &printPrefix)
             printPrefixPtr = ptr;
 
-        bufferLogLine   = AllocHGlobal(1024);
+        bufferLogLine   = Marshal.AllocHGlobal(1024);
         logGlobal       = new("FFmpeg");
         //LogClbkDlg      = LogClbk;
         LogLoaded       = true;
@@ -214,11 +215,11 @@ public unsafe static class Log
                     AVClass** parent = *(AVClass ***) (((byte*) avcl) + avc->parent_log_context_offset);
                     if (parent != null && *parent != null)  
                     {
-                        var ItemNameP = GetDelegateForFunctionPointer<AVClass_item_name>((*parent)->item_name.Pointer);
+                        var ItemNameP = Marshal.GetDelegateForFunctionPointer<AVClass_item_name>((*parent)->item_name.Pointer);
                         parentClassName = $"[{ItemNameP(parent)}] ";
                     }
                 }
-                var ItemName = GetDelegateForFunctionPointer<AVClass_item_name>(avc->item_name.Pointer);
+                var ItemName = Marshal.GetDelegateForFunctionPointer<AVClass_item_name>(avc->item_name.Pointer);
                 className = $"[{ItemName(avcl)}] ";
             }
         }

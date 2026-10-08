@@ -16,11 +16,17 @@ public unsafe class CodecParserBase
     public long         LastPos             => _ptr->last_pos;
 
     public int          CurFrameStartIndex  => _ptr->cur_frame_start_index;
-    public long_array4  CurFrameDts         => _ptr->cur_frame_dts;
-    public long_array4  CurFramePts         => _ptr->cur_frame_pts;
-    public long_array4  CurFramePos         => _ptr->cur_frame_pos;
-    public long_array4  CurFrameOffset      => _ptr->cur_frame_offset;
-    public long_array4  CurFrameEnd         => _ptr->cur_frame_end;
+
+    public ref readonly Array4<long>
+                        CurFrameDts         => ref _ptr->cur_frame_dts;
+    public ref readonly Array4<long>
+                        CurFramePts         => ref _ptr->cur_frame_pts;
+    public ref readonly Array4<long>
+                        CurFramePos         => ref _ptr->cur_frame_pos;
+    public ref readonly Array4<long>
+                        CurFrameOffset      => ref _ptr->cur_frame_offset;
+    public ref readonly Array4<long>
+                        CurFrameEnd         => ref _ptr->cur_frame_end;
     
     public long         CurOffset           => _ptr->cur_offset;
     public long         NextFrameOffset     => _ptr->next_frame_offset;

@@ -68,7 +68,7 @@ public unsafe class AudioEncoder : AVEncoder
 
     public AudioEncoder(AudioEncoderSpec codec) : base(codec) { CodecSpec = codec; }
 
-    public FFmpegResult SendFrame(AudioFrameBase frame)
+    public FFmpegResult SendFrame(AudioFrame frame)
         => new(avcodec_send_frame(_ptr, frame));
 
     public int GetFrameDuration(int frameBytes)

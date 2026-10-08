@@ -16,7 +16,7 @@ public unsafe abstract class AVEncoder : Encoder
     public int RecvPacket(AVPacket* pkt)
         => avcodec_receive_packet(_ptr, pkt);
 
-    public FFmpegResult RecvPacket(PacketBase pkt)
+    public FFmpegResult RecvPacket(Packet pkt)
         => new(avcodec_receive_packet(_ptr, pkt));
 
     // TBR: generally provide also option to local allocate them?

@@ -80,14 +80,14 @@ public unsafe class SampleConverter : IDisposable
     public FFmpegResult InjectSilence(int count)
         => new(swr_inject_silence(ctx, count));
 
-    public FFmpegResult Convert(byte_ptrArray8 srcData, int srcCount, byte_ptrArray8 dstData, int dstCount)
-        => new(swr_convert(ctx, (byte**)&dstData, dstCount, (byte**)&srcData, srcCount));
+    public FFmpegResult Convert(byte** srcData, int srcCount, byte** dstData, int dstCount)
+        => new(swr_convert(ctx, dstData, dstCount, srcData, srcCount));
 
-    public FFmpegResult Convert(AudioFrameBase src, AudioFrameBase dst)
+    public FFmpegResult Convert(AudioFrame src, AudioFrame dst)
         => new(swr_convert_frame(ctx, dst, src));
 
-    public FFmpegResult Drain(byte_ptrArray8 dstData, int dstCount)
-        => new(swr_convert(ctx, (byte**)&dstData, dstCount, null, 0));
+    public FFmpegResult Drain(byte** dstData, int dstCount)
+        => new(swr_convert(ctx, dstData, dstCount, null, 0));
 
     #region Disposal
     public bool Disposed => ctx == null;

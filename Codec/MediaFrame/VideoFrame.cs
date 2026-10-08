@@ -1,6 +1,6 @@
 ﻿namespace Flyleaf.FFmpeg.Codec;
 
-public unsafe abstract class VideoFrameBase : FrameBase
+public unsafe sealed class VideoFrame : Frame
 {
     public AVRational           SampleAspectRatio       { get => _ptr->sample_aspect_ratio;     set => _ptr->sample_aspect_ratio = value;}
 
@@ -33,19 +33,67 @@ public unsafe abstract class VideoFrameBase : FrameBase
     public int                  D3D11TextureIndex       { get => (int)                  _ptr->data[1];  set => _ptr->data[1] = value; }
     public AVD3D12VAFrame*      D3D12Frame              { get => (AVD3D12VAFrame*)      _ptr->data[0];  set => _ptr->data[0] = (nint)value; }
 
-    protected VideoFrameBase() : base() { }
-    protected VideoFrameBase(AVFrame* ptr) : base(ptr) { }
+    internal VideoFrame(AVFrame* ptr) : base(ptr) { }
+
+    public VideoFrame() : base()
+    {
+        _ptr->sample_aspect_ratio.Den = 1;
+
+        _ptr->color_primaries = AVColorPrimaries.Unspecified;
+        _ptr->color_trc       = AVColorTransferCharacteristic.Unspecified;
+        _ptr->colorspace      = AVColorSpace.Unspecified;
+
+        // already Zeroed
+        //_ptr->color_range     = AVColorRange.Unspecified;
+        //_ptr->chroma_location = AVChromaLocation.Unspecified;
+        //_ptr->alpha_mode      = AVAlphaMode.Unspecified;
+    }
+
+    public VideoFrame(int width, int height, AVPixelFormat pixelFormat, bool initBuffer = true, int align = 0) : this()
+    {
+        Width       = width;
+        Height      = height;
+        PixelFormat = pixelFormat;
+        if (initBuffer)
+            InitBuffer(align);          // same as av_image_fill_arrays?
+    }
+
+    // Fill frame from raw data/bytes (this is similar to rawdecoder without using palletes / aligns ... tbr) - usually using + AV_INPUT_BUFFER_PADDING_SIZE/64 alignment
+    //public VideoFrame(int width, int height, AVPixelFormat pixelFormat, FFmpegData data, bool refcounted = false) : this(width, height, pixelFormat, false)
+    //{
+    //    byte* curDataPtr;
+
+    //    if (refcounted)
+    //    {
+    //        _ptr->buf[0] = (nint) av_buffer_create(data.Pointer, (nuint)data.Size, DefaultBufferFreeDlgt, null, 0);
+    //        curDataPtr = ((AVBufferRef*)_ptr->buf[0])->data;
+    //    }
+    //    else
+    //        curDataPtr = data.Pointer; // probably wrong (shoul
+
+    //    av_image_fill_linesizes((int*)&_ptr->linesize, PixelFormat, Width).ThrowFFmpegIfError();
+    //    av_image_fill_pointers((byte**)&_ptr->data, PixelFormat, Height, curDataPtr, (int*)&_ptr->linesize).ThrowFFmpegIfError();
+    //}
 
     public FFmpegResult ApplyCropping(bool aligned = true)
         => new(av_frame_apply_cropping(_ptr, aligned ? 0 : 1)); // AV_FRAME_CROP_UNALIGNED     = 1 << 0 (frame.h)
 
-    public FFmpegResult CopyPropertiesTo(VideoFrameBase frame)
+    public FFmpegResult CopyPropertiesTo(VideoFrame frame)
         => base.CopyPropertiesTo(frame);
 
-    public VideoFrame Clone()
-        => new(CloneRaw());
+    public VideoFrame? Clone()
+    {
+        VideoFrame vFrame = new();
+        if (av_frame_ref(vFrame._ptr, _ptr) < 0)
+        {
+            vFrame.Dispose();
+            return null;
+        }
 
-    public FFmpegResult Ref(VideoFrameBase frame)
+        return vFrame;
+    }
+
+    public FFmpegResult Ref(VideoFrame frame)
         => base.Ref(frame);
 
     public VideoFrame Ref()
@@ -55,16 +103,16 @@ public unsafe abstract class VideoFrameBase : FrameBase
         return frame;
     }
 
-    public void MoveRef(VideoFrameBase frame)
+    public void MoveRef(VideoFrame frame)
         => base.MoveRef(frame);
 
     public int GetBufferSize(int align = 1)
         => PixelFormat.GetBufferSize(Width, Height, align);
 
-    public FFmpegResult TransferTo(VideoFrameBase frame) // Consider CopyPropertiesTo on success?
+    public FFmpegResult TransferTo(VideoFrame frame) // Consider CopyPropertiesTo on success?
         => new(av_hwframe_transfer_data(frame, this, 0)); // flags unused
 
-    public FFmpegResult Map(VideoFrameBase frame, AVHWframeMap flags = AVHWframeMap.None) // Consider CopyPropertiesTo / or w/h only on success?
+    public FFmpegResult Map(VideoFrame frame, AVHWframeMap flags = AVHWframeMap.None) // Consider CopyPropertiesTo / or w/h only on success?
         => new(av_hwframe_map(frame._ptr, _ptr, flags));
 
     public byte[] ToRawImage(int align = 1)
@@ -88,60 +136,4 @@ public unsafe abstract class VideoFrameBase : FrameBase
 
         return data;
     }
-}
-
-public unsafe sealed class VideoFrameView(AVFrame* ptr) : VideoFrameBase(ptr) { }
-
-public unsafe sealed class VideoFrame : VideoFrameBase, IDisposable
-{
-    public VideoFrame() : base() { }
-    public VideoFrame(int width, int height, AVPixelFormat pixelFormat, bool initBuffer = true, int align = 0) : this()
-    {
-        Width       = width;
-        Height      = height;
-        PixelFormat = pixelFormat;
-        if (initBuffer)
-            InitBuffer(align);          // same as av_image_fill_arrays?
-    }
-    public VideoFrame(AVFrame* ptr) : base(ptr) { }
-
-    // Fill frame from raw data/bytes (this is similar to rawdecoder without using palletes / aligns ... tbr) - usually using + AV_INPUT_BUFFER_PADDING_SIZE/64 alignment
-    //public VideoFrame(int width, int height, AVPixelFormat pixelFormat, FFmpegData data, bool refcounted = false) : this(width, height, pixelFormat, false)
-    //{
-    //    byte* curDataPtr;
-
-    //    if (refcounted)
-    //    {
-    //        _ptr->buf[0] = (nint) av_buffer_create(data.Pointer, (nuint)data.Size, DefaultBufferFreeDlgt, null, 0);
-    //        curDataPtr = ((AVBufferRef*)_ptr->buf[0])->data;
-    //    }
-    //    else
-    //        curDataPtr = data.Pointer; // probably wrong (shoul
-
-    //    av_image_fill_linesizes((int*)&_ptr->linesize, PixelFormat, Width).ThrowFFmpegIfError();
-    //    av_image_fill_pointers((byte**)&_ptr->data, PixelFormat, Height, curDataPtr, (int*)&_ptr->linesize).ThrowFFmpegIfError();
-    //}
-
-    #region Disposal
-    ~VideoFrame()
-    {
-        if (!Disposed)
-            Free();
-    }
-
-    public void Dispose()
-    { 
-        if (!Disposed)
-        {
-            Free();
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    void Free()
-    {
-        fixed(AVFrame** _ptrPtr = &_ptr)
-            av_frame_free(_ptrPtr);
-    }
-    #endregion
 }

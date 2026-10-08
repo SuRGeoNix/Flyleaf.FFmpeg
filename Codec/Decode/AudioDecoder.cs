@@ -95,10 +95,10 @@ public unsafe class AudioDecoder : AVDecoder
         stream.SideDataCopyTo(&_ptr->coded_side_data, &_ptr->nb_coded_side_data);
     }
 
-    public FFmpegResult RecvFrame(AudioFrameBase frame)
+    public FFmpegResult RecvFrame(AudioFrame frame)
         => new(avcodec_receive_frame_flags(_ptr, frame, 0));
 
-    public FFmpegResult RecvFrameSync(AudioFrameBase frame)
+    public FFmpegResult RecvFrameSync(AudioFrame frame)
         => new(avcodec_receive_frame_flags(_ptr, frame, AV_CODEC_RECEIVE_FRAME_FLAG_SYNCHRONOUS));
 
     public int GetFrameDuration(int frameBytes)

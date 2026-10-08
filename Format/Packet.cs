@@ -1,31 +1,83 @@
 ﻿namespace Flyleaf.FFmpeg.Format;
 
-// Even if PacketView is not required this might be helpful to allow custom packet implementations
-public unsafe abstract class PacketBase
+/* TODO: FFmpeg wrapper performance cleanup
+    - Remove finalizers
+    - Avoid ref/fixed on _ptr fields
+    - Use a local ptr in constructors before assigning _ptr
+    - Keep _ptr mutable and avoid readonly/reflection workarounds
+    - Force constructor AggressiveInlining (consider also Dispose) so short-lived wrappers can be eliminated completely
+    - Prefer NativeMemory.AllocZeroed/Free where ownership allows
+      (~10-13% faster than FFmpeg av_packet/frame_alloc/free in benchmarks)
+*/
+
+public abstract class PacketFrameSubs : IDisposable
 {
-    public byte*        Data            => _ptr->data;
-    public int          Size            => _ptr->size;
+    public abstract long    Pts             { get; set; }
 
-    public long         Dts             { get => _ptr->dts;             set => _ptr->dts = value; }
-    public long         Pts             { get => _ptr->pts;             set => _ptr->pts = value; }
-    public long         Duration        { get => _ptr->duration;        set => _ptr->duration = value; }
+    public abstract string  GetDump(AVRational timebase);
+    public abstract void    Dispose();
+}
 
-    public PktFlags     Flags           { get => _ptr->flags;           set => _ptr->flags = value; }
-    public long         Pos             { get => _ptr->pos;             set => _ptr->pos = value; }
+public abstract class PacketFrame : PacketFrameSubs
+{
+    public abstract long    Duration        { get; set; }
+
+    public abstract void    UnRef();
+}
+
+public unsafe sealed class Packet : PacketFrame
+{
+    public byte*            Data            => _ptr->data;
+    public int              Size            => _ptr->size;
+
+    public long             Dts             { get => _ptr->dts;             set => _ptr->dts = value; }
+    public override long    Pts             { get => _ptr->pts;             set => _ptr->pts = value; }
+    public override long    Duration        { get => _ptr->duration;        set => _ptr->duration = value; }
+
+    public PktFlags         Flags           { get => _ptr->flags;           set => _ptr->flags = value; }
+    public long             Pos             { get => _ptr->pos;             set => _ptr->pos = value; }
     
-    public int          StreamIndex     { get => _ptr->stream_index;    set => _ptr->stream_index = value; }
+    public int              StreamIndex     { get => _ptr->stream_index;    set => _ptr->stream_index = value; }
 
-    public bool         Disposed        => _ptr == null;
-    public readonly AVPacket* _ptr;
+    public bool             Disposed        => _ptr == null;
+    public AVPacket* _ptr;
 
-    public static implicit operator AVPacket*(PacketBase pkt)
+    public static implicit operator AVPacket*(Packet pkt)
         => pkt._ptr;
 
-    protected PacketBase()
-        => _ptr = av_packet_alloc();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Packet()
+    {
+        var ptr = (AVPacket*)NativeMemory.AllocZeroed((nuint)sizeof(AVPacket));
+        ptr->pts           = NoTs;
+        ptr->dts           = NoTs;
+        ptr->pos           = -1;
+        ptr->time_base.Den = 1;
 
-    protected PacketBase(AVPacket* ptr)
+        _ptr = ptr;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override void Dispose()
+    { 
+        var ptr = _ptr;
+        if (ptr == null)
+            return;
+
+        _ptr = null;
+
+        av_packet_unref(ptr);
+        NativeMemory.Free(ptr);
+    }
+
+    internal Packet(AVPacket* ptr)
         => _ptr = ptr;
+
+    public Packet(int dataSize) : this()
+        => new FFmpegResult(av_new_packet(_ptr, dataSize)).ThrowOnFailure();
+
+    public Packet(byte* data, int dataSize) : this()
+        => new FFmpegResult(av_packet_from_data(_ptr, data, dataSize)).ThrowOnFailure();
 
     public Span<byte> DataAsSpan()
         => new(_ptr->data, _ptr->size);
@@ -33,7 +85,7 @@ public unsafe abstract class PacketBase
     public int CopyProperties(AVPacket* pkt)
         => av_packet_copy_props(pkt, _ptr);
 
-    public int CopyProperties(PacketBase pkt)
+    public int CopyProperties(Packet pkt)
          => av_packet_copy_props(pkt._ptr, _ptr);
 
     public void RescaleTimestamp(AVRational source, AVRational dest) // TBR (stream, another packet, anything with timebase?) + rescale options?
@@ -57,7 +109,7 @@ public unsafe abstract class PacketBase
     public int Ref(AVPacket* pkt)
         => av_packet_ref(pkt, _ptr);
 
-    public int Ref(PacketBase pkt)
+    public int Ref(Packet pkt)
         => av_packet_ref(pkt._ptr, _ptr);
 
     public Packet Ref()
@@ -67,20 +119,29 @@ public unsafe abstract class PacketBase
         return packet;
     }
 
-    public void UnRef()
+    public override void UnRef()
         => av_packet_unref(_ptr);
 
     public void MoveRef(AVPacket* pkt)
         => av_packet_move_ref(pkt, _ptr);
 
-    public void MoveRef(PacketBase pkt)
+    public void MoveRef(Packet pkt)
         => MoveRef(pkt._ptr);
 
     public AVPacket* CloneRaw()
         => av_packet_clone(_ptr);
 
-    public Packet Clone()
-        => new(av_packet_clone(_ptr));
+    public Packet? Clone()
+    {
+        Packet packet = new();
+        if (av_packet_ref(packet._ptr, _ptr) < 0)
+        {
+            packet.Dispose();
+            return null;
+        }
+
+        return packet;
+    }
 
     public void Dump(AVStream* stream, bool payload = false, LogLevel logLevel = LogLevel.Debug)
         => av_pkt_dump_log2(null, logLevel, _ptr, payload ? 1 : 0, stream);
@@ -88,7 +149,7 @@ public unsafe abstract class PacketBase
     public string GetDump(AVRational timebase, char mediaType)
         => $"[{mediaType}#{_ptr->stream_index:D2}] {GetDump(timebase)}";
 
-    public string GetDump(AVRational timebase)
+    public override string GetDump(AVRational timebase)
     {
         string? sideData = null;
 
@@ -106,36 +167,29 @@ public unsafe abstract class PacketBase
 
         if (_ptr->dts != NoTs)
         {
-            dts = McsToTimeMini(av_rescale_q(_ptr->dts, timebase, TIME_BASE_Q)); //DoubleToTime(pkt->dts * av_q2d(Stream.Timebase));
+            dts = McsToTimeMini(av_rescale_q(_ptr->dts, timebase, TIME_BASE_Q));
             Dts = _ptr->dts.ToString();
         }
         else
-        {
             dts = Dts = "-";
-        }
 
         if (_ptr->pts != NoTs)
         {
-            pts = McsToTimeMini(av_rescale_q(_ptr->pts, timebase, TIME_BASE_Q)); // DoubleToTime(pkt->pts * av_q2d(Stream.Timebase));
+            pts = McsToTimeMini(av_rescale_q(_ptr->pts, timebase, TIME_BASE_Q));
             Pts = _ptr->pts.ToString();
         }
         else
-        {
             pts = Pts = "-";
-        }
 
         if (_ptr->duration > 0)
         {
-            dur = McsToTimeMini(av_rescale_q(_ptr->duration, timebase, TIME_BASE_Q)); //DoubleToTime(pkt->duration * av_q2d(Stream.Timebase));
+            dur = McsToTimeMini(av_rescale_q(_ptr->duration, timebase, TIME_BASE_Q));
             Dur = _ptr->duration.ToString();
         }
         else
-        {
             dur = Dur = "-";
-        }
         
-        return $"dts: {dts + " (" + Dts + ")",-25}, pts: {pts + " (" + Pts + ")",-25}, dur: {dur + " (" + Dur + ")",-20}, pos: {_ptr->pos,-12}, size: {_ptr->size,-7}, flags: [{flags}]{(sideData != null ? ", side: [" + sideData + "]" : "")}";//{(mediaType == 'V' && _ptr->flags.HasFlag(PktFlags.Key) ? ", (VK)" : "")}";
-        //return $"dts: {dts + " (" + Dts + ")",-25}, pts: {pts + " (" + Pts + ")",-25}, dur: {dur + " (" + Dur + ")",-20}, pos: {_ptr->pos,-12}, size: {_ptr->size,-7}{(sideData != null ? ", side: [" + sideData + "]" : "")}{(flags != null ? ", flags: [" + flags + "]" : "")}";//{(mediaType == 'V' && _ptr->flags.HasFlag(PktFlags.Key) ? ", (VK)" : "")}";
+        return $"dts: {dts + " (" + Dts + ")",-25},pts: {pts + " (" + Pts + ")",-25},dur: {dur + " (" + Dur + ")",-20},pos: {_ptr->pos,-12},size: {_ptr->size,-7}{(flags != null ? ",flags: [" + flags + "]" : "")}{(sideData != null ? ",side: [" + sideData + "]" : "")}";
     }
 
     #region SideData
@@ -159,45 +213,5 @@ public unsafe abstract class PacketBase
 
     public void SideDataFree()
         => av_packet_side_data_free(&_ptr->side_data, &_ptr->side_data_elems);
-    #endregion
-}
-
-// View from existing owned packet based on ptr - no finalizer/disposal (TBR: if required)
-public unsafe sealed class PacketView(AVPacket* ptr) : PacketBase(ptr) { }
-
-// Owned Disposable Packet
-public unsafe sealed class Packet : PacketBase, IDisposable
-{
-    public Packet() : base() { }
-
-    public Packet(int dataSize) : base()
-        => new FFmpegResult(av_new_packet(_ptr, dataSize)).ThrowOnFailure();
-
-    public Packet(byte* data, int dataSize) : base()
-        => new FFmpegResult(av_packet_from_data(_ptr, data, dataSize)).ThrowOnFailure();
-
-    internal Packet(AVPacket* ptr) : base(ptr) { } // Allow owned packet from ptr when we clone
-
-    #region Disposal
-    ~Packet()
-    {
-        if (!Disposed)
-            Free();
-    }
-
-    public void Dispose()
-    { 
-        if (!Disposed)
-        {
-            Free();
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    void Free()
-    {
-        fixed (AVPacket** _ptrPtr = &_ptr)
-            av_packet_free(_ptrPtr);
-    }
     #endregion
 }

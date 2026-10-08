@@ -17,7 +17,7 @@ public unsafe abstract class AVDecoder : Decoder
     public FFmpegResult SendPacket(AVPacket* pkt)
         => new(avcodec_send_packet(_ptr, pkt));
 
-    public FFmpegResult SendPacket(PacketBase pkt)
+    public FFmpegResult SendPacket(Packet pkt)
         => new(avcodec_send_packet(_ptr, pkt));
 
     public FFmpegResult Drain()

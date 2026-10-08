@@ -112,19 +112,19 @@ public unsafe class Muxer : FormatContext
     public FFmpegResult WriteTrailer()
         => new(av_write_trailer(_ptr));
 
-    public FFmpegResult WritePacket(PacketBase pkt)
+    public FFmpegResult WritePacket(Packet pkt)
         => new(av_write_frame(_ptr, pkt));
 
     public FFmpegResult WritePacket(AVPacket* pkt)
         => new(av_write_frame(_ptr, pkt));
 
-    public FFmpegResult WritePacketInterleaved(PacketBase pkt)
+    public FFmpegResult WritePacketInterleaved(Packet pkt)
         => new(av_interleaved_write_frame(_ptr, pkt));
 
     public FFmpegResult WritePacketInterleaved(AVPacket* pkt)
         => new(av_interleaved_write_frame(_ptr, pkt));
 
-    public FFmpegResult WriteUncodedFrame(FrameBase frm, int streamIndex)
+    public FFmpegResult WriteUncodedFrame(Frame frm, int streamIndex)
         => new(av_write_uncoded_frame(_ptr, streamIndex, frm));
 
     public FFmpegResult WriteUncodedFrame(AVFrame* frm, int streamIndex)

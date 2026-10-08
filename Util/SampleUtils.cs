@@ -19,12 +19,8 @@ public unsafe static class SampleUtils
         => av_samples_alloc_array_and_samples(data, linesize, channels, samples, format, align ? 0 : 1);
 
     // Unsafe: this might exceed the array limits (audio can have more than 8 channels* data[8] + extended_data[X])
-    public static int SamplesAllocate(ref byte_ptrArray8 data, ref int_array8 linesize, AVSampleFormat format, int channels, int samples, bool align = true)
-    {
-        fixed(byte_ptrArray8* dataPtr = &data)
-            fixed(int_array8* linesizePtr = &linesize)
-                return av_samples_alloc((byte**)dataPtr, (int*)linesizePtr, channels, samples, format, align ? 0 : 1);
-    }
+    public static int SamplesAllocate(byte** data, int* linesize, AVSampleFormat format, int channels, int samples, bool align = true)
+        => av_samples_alloc(data, linesize, channels, samples, format, align ? 0 : 1);
 
     // from single raw byte data to plane pointers (Fill Planes/Linesize?)
     public static int FillArrays(byte* buf, byte** data, int* linesize, AVSampleFormat format, int channels, int samples, bool align = true)

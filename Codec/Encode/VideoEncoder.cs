@@ -124,12 +124,12 @@ public unsafe class VideoEncoder : AVEncoder
         return (width, height);
     }
 
-    public (int widthAligned, int heightAligned) AlignDimensions(int width, int height, int_array8 linesize)
+    public (int widthAligned, int heightAligned) AlignDimensions(int width, int height, int* linesize)
     {
-        avcodec_align_dimensions2(_ptr, &width, &height, ref linesize);
+        avcodec_align_dimensions2(_ptr, &width, &height, linesize);
         return (width, height);
     }
 
-    public FFmpegResult SendFrame(VideoFrameBase frame)
+    public FFmpegResult SendFrame(VideoFrame frame)
         => new(avcodec_send_frame(_ptr, frame));
 }

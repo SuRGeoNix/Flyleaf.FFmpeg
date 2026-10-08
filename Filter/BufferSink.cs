@@ -2,7 +2,7 @@
 
 public unsafe class BufferSink : FilterContext
 {
-    public AVRational           Timebase            => InPads[0].FilterLink is AudioFilterLink link ? link.Timebase                     : AVRational.Default; //av_buffersink_get_time_base(_ptr);
+    public AVRational           Timebase            => InPads[0].FilterLink is AudioFilterLink link ? link.Timebase                     : AVRational.Zero; //av_buffersink_get_time_base(_ptr);
 
     protected BufferSink(FilterGraph graph, AVFilterContext* ctx) : base(graph, ctx) { }
 
@@ -47,10 +47,10 @@ public unsafe class AudioBufferSink : BufferSink
     public FFmpegResult RecvFrame(AVFrame* frame, int samples)
         => new(av_buffersink_get_samples(_ptr, frame, samples));
 
-    public FFmpegResult RecvFrame(AudioFrameBase frame, int samples)
+    public FFmpegResult RecvFrame(AudioFrame frame, int samples)
         => new(av_buffersink_get_samples(_ptr, frame, samples));
 
-    public FFmpegResult RecvFrame(AudioFrameBase frame, BufferSinkFlags flags = BufferSinkFlags.None)
+    public FFmpegResult RecvFrame(AudioFrame frame, BufferSinkFlags flags = BufferSinkFlags.None)
         => new(av_buffersink_get_frame_flags(_ptr, frame, flags));
 
     public void SetMinMaxSamples(int samples)
@@ -63,7 +63,7 @@ public unsafe class VideoBufferSink : BufferSink
     public AVPixelFormat    PixelFormat         => InPads[0].FilterLink is VideoFilterLink link ? link.PixelFormat          : AVPixelFormat.None;
     public AVColorSpace     ColorSpace          => InPads[0].FilterLink is VideoFilterLink link ? link.ColorSpace           : AVColorSpace.Unspecified;
     public AVColorRange     ColorRange          => InPads[0].FilterLink is VideoFilterLink link ? link.ColorRange           : AVColorRange.Unspecified;
-    public AVRational       SampleAspectRatio   => InPads[0].FilterLink is VideoFilterLink link ? link.SampleAspectRatio    : AVRational.Default;
+    public AVRational       SampleAspectRatio   => InPads[0].FilterLink is VideoFilterLink link ? link.SampleAspectRatio    : AVRational.Zero;
     public int              Width               => InPads[0].FilterLink is VideoFilterLink link ? link.Width                : 0;
     public int              Height              => InPads[0].FilterLink is VideoFilterLink link ? link.Height               : 0;
 
@@ -93,6 +93,6 @@ public unsafe class VideoBufferSink : BufferSink
             AVClass.Set("alphamodes",  param.AlphaModes,    AVOptionType.Int).      ThrowOnFailure();
     }
 
-    public FFmpegResult RecvFrame(VideoFrameBase frame, BufferSinkFlags flags = BufferSinkFlags.None)
+    public FFmpegResult RecvFrame(VideoFrame frame, BufferSinkFlags flags = BufferSinkFlags.None)
         => new(av_buffersink_get_frame_flags(_ptr, frame, flags));
 }

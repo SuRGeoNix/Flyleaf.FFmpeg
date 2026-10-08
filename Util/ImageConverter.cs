@@ -19,7 +19,7 @@ public unsafe class ImageConverter : IDisposable
     public int InitContext()
         => sws_init_context(ctx, null, null);
 
-    public int FillColorSpaceDetails(int_array4 srcSpace, bool srcFullRange, int_array4 dstSpace, bool dstFullRange, int brightness, int contrast, int saturation) // class?
+    public int FillColorSpaceDetails(int* srcSpace, bool srcFullRange, int* dstSpace, bool dstFullRange, int brightness, int contrast, int saturation) // class?
         => sws_setColorspaceDetails(ctx, srcSpace, srcFullRange ? 1 : 0, dstSpace, dstFullRange ? 1 : 0, brightness, contrast, saturation);
 
     public (int success, int[] scrSpace, bool srcFullRange, int[] dstSpace, bool dstFullRange, int brightness, int contrast, int saturation) // class?
@@ -40,13 +40,10 @@ public unsafe class ImageConverter : IDisposable
             (ret, new Span<int>(srcSpace, 4).ToArray(), srcFullRange != 0, new Span<int>(dstSpace, 4).ToArray(), dstFullRange != 0, brightness, contrast, saturation);
     }
 
-    public int Convert(byte_ptrArray4 srcData, int_array4 srcLinesize, int srcSliceH, byte_ptrArray4 dstData, int_array4 dstLinesize, int srcSliceY = 0)
-        => sws_scale(ctx, srcData.ToRawArray(), srcLinesize.ToArray(), srcSliceY, srcSliceH, dstData.ToRawArray(), dstLinesize.ToArray());
+    public int Convert(byte** srcData, int* srcLinesize, int srcSliceH, byte** dstData, int* dstLinesize, int srcSliceY = 0)
+        => sws_scale(ctx, srcData, srcLinesize, srcSliceY, srcSliceH, dstData, dstLinesize);
 
-    public int Convert(byte_ptrArray8 srcData, int_array8 srcLinesize, int srcSliceH, byte_ptrArray8 dstData, int_array8 dstLinesize, int srcSliceY = 0)
-        => sws_scale(ctx, srcData.ToRawArray(), srcLinesize.ToArray(), srcSliceY, srcSliceH, dstData.ToRawArray(), dstLinesize.ToArray());
-
-    public int Convert(VideoFrameBase src, VideoFrameBase dst)
+    public int Convert(VideoFrame src, VideoFrame dst)
         => sws_scale_frame(ctx, dst, src);
 
     public static bool IsSupportedHWFormat(AVPixelFormat format) // currently only for Vulkan?

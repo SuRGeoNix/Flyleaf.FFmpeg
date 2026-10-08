@@ -25,10 +25,22 @@ public class LogHandler
     //public LogHandler(string moduleName, LogHandler? parent = null, int? id = null, string? prefix = null, int? padding = null) :
     //    this(moduleName, parent, id != null ? $"#{id}" : null, prefix, padding) { Id = id; }
 
+    public LogHandler(string moduleName, string prefix, LogHandler? parent = null)
+    {
+        Initialize(moduleName);
+
+        if (parent != null)
+        {
+            Parent = parent;
+            Prefix = parent.Prefix + prefix;
+        }
+        else
+            Prefix = prefix;
+    }
+
     public LogHandler(string moduleName, LogHandler? parent = null, string? strId = null, string? prefix = null, int? padding = null)
     {
-        included = Log.IsModuleIncluded(moduleName);
-
+        Initialize(moduleName);
         prefix ??= moduleName;
         //Id = id;
         //string strId = $"{id:D2}";
@@ -38,6 +50,11 @@ public class LogHandler
             (strId != null ? 
             $"[{(padding != null ? prefix.PadRight((int)padding) : prefix.PadRight(Log.config.Padding - strId.ToString()!.Length - 1))} {strId}] " : 
             $"[{(padding != null ? prefix.PadRight((int)padding) : prefix.PadRight(Log.config.Padding))}] ");
+    }
+
+    void Initialize(string moduleName)
+    {
+        included = Log.IsModuleIncluded(moduleName);
 
         if (included)
         {

@@ -38,7 +38,7 @@ public unsafe class AudioBufferSource : BufferSource
     public FFmpegResult SetParameters(AudioBufferSourceParams param)
        => base.SetParameters(param);
 
-    public FFmpegResult SendFrame(AudioFrameBase frame, AVBuffersrcFlag flags = AVBuffersrcFlag.None)
+    public FFmpegResult SendFrame(AudioFrame frame, AVBuffersrcFlag flags = AVBuffersrcFlag.None)
         => new(av_buffersrc_add_frame_flags(_ptr, frame, flags));
 
     // maybe add gets?
@@ -56,6 +56,6 @@ public unsafe class VideoBufferSource : BufferSource
     public FFmpegResult SetParameters(VideoBufferSourceParams param)
        => base.SetParameters(param);
 
-    public FFmpegResult SendFrame(VideoFrameBase frame, AVBuffersrcFlag flags = AVBuffersrcFlag.None)
+    public FFmpegResult SendFrame(VideoFrame frame, AVBuffersrcFlag flags = AVBuffersrcFlag.None)
         => new(av_buffersrc_add_frame_flags(_ptr, frame, flags)); // NOTE: write_frame is equivalent with KeepRef
 }

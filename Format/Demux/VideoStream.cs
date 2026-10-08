@@ -38,11 +38,11 @@ public unsafe class VideoStream : MediaStream
             return 0;
 
         AVPacketSideData* displayMatrixPtr = av_packet_side_data_get(_codecpar->coded_side_data, _codecpar->nb_coded_side_data, AVPacketSideDataType.Displaymatrix);
-        if (displayMatrixPtr == null || displayMatrixPtr->data == null)
-            return 0;
         
-        int_array9 displayMatrix = PtrToStructure<int_array9>((nint)displayMatrixPtr->data);
-        return av_display_rotation_get(displayMatrix);
+        return
+            displayMatrixPtr != null && displayMatrixPtr->data != null ?
+            av_display_rotation_get((int*)displayMatrixPtr->data) :
+            0;
     }
 
     public AVRational GuessSampleAspectRatio()

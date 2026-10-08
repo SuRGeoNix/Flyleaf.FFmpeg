@@ -41,7 +41,7 @@ public unsafe class FFmpegClass : FFmpegClassSpec
         if (@class->child_next.Pointer == 0)
             return null;
 
-        var ChildNext = GetDelegateForFunctionPointer<AVClass_child_next>(@class->child_next.Pointer); // same as av_opt_child_next
+        var ChildNext = Marshal.GetDelegateForFunctionPointer<AVClass_child_next>(@class->child_next.Pointer); // same as av_opt_child_next
         void* childCtx;
         
         return 
@@ -55,7 +55,7 @@ public unsafe class FFmpegClass : FFmpegClassSpec
         if (@class->get_category.Pointer == 0)
             return AVClassCategory.Na;
 
-        var GetCategoryX = GetDelegateForFunctionPointer<AVClass_get_category>(@class->get_category.Pointer);
+        var GetCategoryX = Marshal.GetDelegateForFunctionPointer<AVClass_get_category>(@class->get_category.Pointer);
         return GetCategoryX(ctx);
     }
 

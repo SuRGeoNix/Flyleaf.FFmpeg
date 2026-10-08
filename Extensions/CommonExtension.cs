@@ -9,7 +9,7 @@ public unsafe static class CommonExtension
         => av_pix_fmt_desc_get(format);
 
     public static string GetName(this AVCodecID codecId) // normally this is not required as we use specs? (or if it is, consider using CodecSpecById)
-        => avcodec_get_name(codecId);
+        => avcodec_get_name_str(codecId)!;
 
     public static int GetBitsPerSample(this AVCodecID codecId)
         => av_get_bits_per_sample(codecId);
@@ -21,13 +21,13 @@ public unsafe static class CommonExtension
         => av_get_exact_bits_per_sample(codecId);
 
     public static string GetName(this AVMediaType type)
-        => av_get_media_type_string(type);
+        => av_get_media_type_string_str(type)!;
 
     public static string GetName(this AVPixelFormat format)
-        => av_get_pix_fmt_name(format);
+        => av_get_pix_fmt_name_str(format)!;
 
     public static string GetName(this AVSampleFormat format)
-        => av_get_sample_fmt_name(format);
+        => av_get_sample_fmt_name_str(format)!;
 
     public static bool IsPlanar(this AVSampleFormat format)
         => av_sample_fmt_is_planar(format) != 0;

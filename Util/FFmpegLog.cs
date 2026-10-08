@@ -13,7 +13,7 @@ public static class FFmpegLog
     public static void UnSetCallback()
     {
         LogClbkDlg = null;
-        av_log_set_callback(null);
+        av_log_set_callback((av_log_set_callback_callback)null!);
     }
 
     public unsafe static void SetDefaultCallback()

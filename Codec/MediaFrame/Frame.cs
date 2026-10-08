@@ -17,7 +17,7 @@ public unsafe abstract class Frame : PacketFrame
     public string?                      MetadataGet(string key, DictReadFlags flags = DictReadFlags.None)
                                                                 { var val = av_dict_get(_ptr->metadata, key, null, flags); return val != null ? GetString(val->value) : null; }
     public int                          MetadataSet(string key, string value, DictWriteFlags flags = DictWriteFlags.None)
-                                                                => av_dict_set(&_ptr->metadata, key, value, flags);
+                                                                => av_dict_set(ref _ptr->metadata, key, value, flags);
     
     public FrameFlags                   Flags                   { get => _ptr->flags;                  set => _ptr->flags = value; }
     public bool                         IsWritable              => av_frame_is_writable(_ptr) != 0;

@@ -13,12 +13,12 @@ public unsafe class Demuxer : FormatContext
     public int              MaxStreams                  { get => _ptr->max_streams;                      set => _ptr->max_streams = value; }
     public long             SkipInitialBytes            { get => _ptr->skip_initial_bytes;               set => _ptr->skip_initial_bytes = value; }
 
-    public string?          FormatWhitelist             { get => GetString(_ptr->format_whitelist);      set => _ptr->format_whitelist = av_strdup(value); }
-    public string?          ProtocolWhitelist           { get => GetString(_ptr->protocol_whitelist);    set => _ptr->protocol_whitelist = av_strdup(value); } // if pb will be copied from it when null
-    public string?          ProtocolBlacklist           { get => GetString(_ptr->protocol_blacklist);    set => _ptr->protocol_blacklist = av_strdup(value); } // if pb will be copied from it when null
+    public string?          FormatWhitelist             { get => GetString(_ptr->format_whitelist);      set => _ptr->format_whitelist = av_strdup(value!); }
+    public string?          ProtocolWhitelist           { get => GetString(_ptr->protocol_whitelist);    set => _ptr->protocol_whitelist = av_strdup(value!); } // if pb will be copied from it when null
+    public string?          ProtocolBlacklist           { get => GetString(_ptr->protocol_blacklist);    set => _ptr->protocol_blacklist = av_strdup(value!); } // if pb will be copied from it when null
 
     // probe stream info (set before avformat_find_stream_info) - not required if we dont Analyse()
-    public string?          DecoderWhitelist            { get => GetString(_ptr->codec_whitelist);       set => _ptr->codec_whitelist = av_strdup(value); }
+    public string?          DecoderWhitelist            { get => GetString(_ptr->codec_whitelist);       set => _ptr->codec_whitelist = av_strdup(value!); }
     public long             MaxDurationProbeBytes       { get => _ptr->duration_probesize;               set => _ptr->duration_probesize = value; }
     public int              MaxFPSProbeFrames           { get => _ptr->fps_probe_size;                   set => _ptr->fps_probe_size = value; }
     public long             MaxAnalyzeMcs               { get => _ptr->max_analyze_duration;             set => _ptr->max_analyze_duration = value; }
@@ -69,7 +69,7 @@ public unsafe class Demuxer : FormatContext
     public string?          MetadataGet(string key, DictReadFlags flags = DictReadFlags.None)
                                                         { var val = av_dict_get(_ptr->metadata, key, null, flags); return val != null ? GetString(val->value) : null; }
     public int              MetadataSet(string key, string value, DictWriteFlags flags = DictWriteFlags.None)
-                                                        => av_dict_set(&_ptr->metadata, key, value, flags);
+                                                        => av_dict_set(ref _ptr->metadata, key, value, flags);
     public int              IORepositioned              => _ptr->io_repositioned;
     public int              ProbedScore                 => _ptr->probe_score;
     public AVDurationEstimationMethod
@@ -77,16 +77,16 @@ public unsafe class Demuxer : FormatContext
     #endregion
 
     #region (Static) Exposing default IO Open/Close (might be used by custom IO Open/Close)
-    public static AVFormatContext_io_open
+    public static AVFormatContext.IOOpen
                             IOOpenDefaultDlgt           { get;  private set; }
-    public static AVFormatContext_io_close2
+    public static AVFormatContext.IOClose2
                             IOCloseDefaultDlgt          { get;  private set; }
 
     static Demuxer()
     {
         var tmpctx = avformat_alloc_context();
-        IOOpenDefaultDlgt   = Marshal.GetDelegateForFunctionPointer<AVFormatContext_io_open>(tmpctx->io_open.Pointer);
-        IOCloseDefaultDlgt  = Marshal.GetDelegateForFunctionPointer<AVFormatContext_io_close2>(tmpctx->io_close2.Pointer);
+        IOOpenDefaultDlgt   = Marshal.GetDelegateForFunctionPointer<AVFormatContext.IOOpen>(tmpctx->io_open.Pointer);
+        IOCloseDefaultDlgt  = Marshal.GetDelegateForFunctionPointer<AVFormatContext.IOClose2>(tmpctx->io_close2.Pointer);
         avformat_free_context(tmpctx);
     }
     #endregion
@@ -94,16 +94,16 @@ public unsafe class Demuxer : FormatContext
     #region Constructor(s) / Open-Init
     public void*            InterruptOpaque             { get => _ptr->interrupt_callback.opaque; set => _ptr->interrupt_callback.opaque = value; } // TBR to avoid unsafe in the constructor (make it nint?)
 
-    AVIOInterruptCB_callback?   InterruptDlgt;
-    AVFormatContext_io_open?    IOOpenDlgt;
-    AVFormatContext_io_close2?  IOCloseDlgt;
+    AVIOInterruptCB.Callback?   InterruptDlgt;
+    AVFormatContext.IOOpen?     IOOpenDlgt;
+    AVFormatContext.IOClose2?   IOCloseDlgt;
     
     // TBR: Check ReadPacket2
     //public event EventHandler? StreamsAdded;
     //public event EventHandler? MetadataUpdated;
     //public event EventHandler<MediaStream>? StreamMetadataUpdated;
 
-    public Demuxer(AVFormatContext_io_open? ioopenClbk = null, AVFormatContext_io_close2? iocloseClbk = null) : base(avformat_alloc_context()) // constructor for avformat_open_input? not required*
+    public Demuxer(AVFormatContext.IOOpen? ioopenClbk = null, AVFormatContext.IOClose2? iocloseClbk = null) : base(avformat_alloc_context()) // constructor for avformat_open_input? not required*
     {
         Flags = DemuxerFlags.None; // wrongly sets AutoBsf by default
         
@@ -123,15 +123,15 @@ public unsafe class Demuxer : FormatContext
     public FFmpegResult Open(IOContext ioContext, DemuxerSpec? spec = null, Dictionary<string, string>? opts = null)
         => Open1(ioContext: ioContext, inFmt: spec ?? (AVInputFormat*)null, opts: opts);
 
-    public FFmpegResult Open(string url, DemuxerSpec? spec = null, Dictionary<string, string>? opts = null, AVIOInterruptCB_callback? interruptClbk = null)//, void* interruptClbkOpaque = null) will require callers to use unsafe
+    public FFmpegResult Open(string url, DemuxerSpec? spec = null, Dictionary<string, string>? opts = null, AVIOInterruptCB.Callback? interruptClbk = null)//, void* interruptClbkOpaque = null) will require callers to use unsafe
         => Open1(url: url, inFmt: spec ?? (AVInputFormat*)null, opts: opts, interruptClbk: interruptClbk, interruptClbkOpaque: null);
 
     // TBR: use just NOFILE fmt without url? (check at least not null*)
-    public FFmpegResult Open(DemuxerSpec spec, Dictionary<string, string>? opts = null, AVIOInterruptCB_callback? interruptClbk = null, void* interruptClbkOpaque = null)
+    public FFmpegResult Open(DemuxerSpec spec, Dictionary<string, string>? opts = null, AVIOInterruptCB.Callback? interruptClbk = null, void* interruptClbkOpaque = null)
         => Open1(inFmt: spec, opts: opts, interruptClbk: interruptClbk, interruptClbkOpaque: interruptClbkOpaque);
     
     int checkOpens;
-    FFmpegResult Open1(IOContext? ioContext = null, string? url = null, AVInputFormat* inFmt = null, Dictionary<string, string>? opts = null, AVIOInterruptCB_callback? interruptClbk = null, void* interruptClbkOpaque = null)
+    FFmpegResult Open1(IOContext? ioContext = null, string? url = null, AVInputFormat* inFmt = null, Dictionary<string, string>? opts = null, AVIOInterruptCB.Callback? interruptClbk = null, void* interruptClbkOpaque = null)
     {
         if (checkOpens++ > 0)
             throw new Exception("Demuxer cannot be re-used");
@@ -151,7 +151,7 @@ public unsafe class Demuxer : FormatContext
         }
 
         FFmpegResult ret = opts != null ? Open12(opts, url, inFmt) : Open11(url, inFmt); // possible to interrupt/cancel and still return 0?
-        ret.ThrowOnFailure();
+        ret.ThrowOnFailure(); // TBR: Wrapper / ptr is invalid after failture
 
         if (!Disposed)
             FillAll();
@@ -161,8 +161,9 @@ public unsafe class Demuxer : FormatContext
 
     FFmpegResult Open11(string? url = null, AVInputFormat* inFmt = null)
     {
-        fixed(AVFormatContext** ptrPtr = &_ptr)
-            return new(avformat_open_input(ptrPtr, url, inFmt, null));
+        AVDictionary* avopts = null;
+        var ptr = _ptr;
+        return new(avformat_open_input(ref ptr, url!, inFmt, ref avopts));
     }
 
     FFmpegResult Open12(Dictionary<string, string> opts, string? url = null, AVInputFormat* inFmt = null)
@@ -170,8 +171,9 @@ public unsafe class Demuxer : FormatContext
         var avopts  = AVDictFromDict(opts);
 
         FFmpegResult ret;
-        fixed(AVFormatContext** ptrPtr = &_ptr)
-             ret = new(avformat_open_input(ptrPtr, url, inFmt, &avopts)); // We can pass ctx->iformat manually before here (not the same for url/filename)
+        
+        var ptr = _ptr;
+        ret = new(avformat_open_input(ref ptr, url!, inFmt, ref avopts)); // We can pass ctx->iformat manually before here (not the same for url/filename)
         
         opts.Clear();
 

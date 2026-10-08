@@ -8,7 +8,7 @@ public unsafe class Muxer : FormatContext
     public FmtEventFlags    EventFlags              { get => _ptr->event_flags;              set => _ptr->event_flags = value; }
 
     public int              AudioPreload            { get => _ptr->audio_preload;            set => _ptr->audio_preload = value; }
-    public AvoidNegTSFlags  AvoidNegTSFlags         { get => _ptr->avoid_negative_ts;        set => _ptr->avoid_negative_ts = value; }
+    public AvoidNegTsFlags  AvoidNegTSFlags         { get => _ptr->avoid_negative_ts;        set => _ptr->avoid_negative_ts = value; }
     public int              FlushPackets            { get => _ptr->flush_packets;            set => _ptr->flush_packets = value; }
     public int              MetadataHeaderPadding   { get => _ptr->metadata_header_padding;  set => _ptr->metadata_header_padding = value; }
     public int              MaxChunkDuration        { get => _ptr->max_chunk_duration;       set => _ptr->max_chunk_duration = value; }
@@ -42,11 +42,8 @@ public unsafe class Muxer : FormatContext
     public Muxer(MuxerSpec spec, string fileName) : this(spec, null, fileName) { }
 
     bool disposeIOContext;
-    internal Muxer(AVOutputFormat* outFmt = null, string? outFmtName = null, string? fileName = null, IOContext? ioContext = null, bool disposeIOContext = true) : base()
+    internal Muxer(AVOutputFormat* outFmt = null, string? outFmtName = null, string? fileName = null, IOContext? ioContext = null, bool disposeIOContext = true) : base(Allocate(outFmt, outFmtName, fileName))
     {
-        fixed(AVFormatContext** ptrPtr = &_ptr)
-            new FFmpegResult(avformat_alloc_output_context2(ptrPtr, outFmt, outFmtName, fileName)).ThrowOnFailure(); // this just allocates + av_guess_format and sets the default opts of the oformat
-
         if (ioContext == null)
         {
             if (!MuxerSpec.Flags.HasFlag(MuxerSpecFlags.NoFile))
@@ -67,6 +64,13 @@ public unsafe class Muxer : FormatContext
             IOContext = ioContext;
             this.disposeIOContext = disposeIOContext;
         }
+    }
+
+    static AVFormatContext* Allocate(AVOutputFormat* outFmt = null, string? outFmtName = null, string? fileName = null)
+    {
+        AVFormatContext* ctx = null;
+        new FFmpegResult(avformat_alloc_output_context2(ref ctx, outFmt, outFmtName!, fileName!)).ThrowOnFailure(); // this just allocates + av_guess_format and sets the default opts of the oformat
+        return ctx;
     }
 
     // TBR: Check auto dispose in case of init/write header failure

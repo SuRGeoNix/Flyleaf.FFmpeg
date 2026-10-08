@@ -6,9 +6,9 @@ public unsafe partial class IOContext
     bool                disposeStream;
     byte*               buffer;
 
-    avio_alloc_context_read_packet?     ReadPacketDlgt;
-    avio_alloc_context_write_packet?    WritePacketDlgt;
-    avio_alloc_context_seek?            SeekDlgt;
+    avio_alloc_context_read_packet      ReadPacketDlgt;
+    avio_alloc_context_write_packet     WritePacketDlgt;
+    avio_alloc_context_seek             SeekDlgt;
 
     /// <summary>
     /// Creates an IOContext which can be used for Mux(write) or Demux(read/seek)
@@ -23,9 +23,9 @@ public unsafe partial class IOContext
         try { CanSeek   = stream.CanSeek; } catch { };
         try { _         = stream.Length; CanLength = true; } catch { }; // 0 length?
 
-        ReadPacketDlgt  = !stream.CanRead   ? null : ReadPacket;
-        WritePacketDlgt = !stream.CanWrite  ? null : WritePacket;
-        SeekDlgt        = !stream.CanSeek   ? null : CanLength ? SeekLength : Seek;
+        ReadPacketDlgt  = !stream.CanRead   ? null! : ReadPacket;
+        WritePacketDlgt = !stream.CanWrite  ? null! : WritePacket;
+        SeekDlgt        = !stream.CanSeek   ? null! : CanLength ? SeekLength : Seek;
 
         this.stream = stream;
         this.disposeStream = disposeStream;
@@ -34,9 +34,9 @@ public unsafe partial class IOContext
         // TODO set to 1 for Write (and user should decide if wants read/write)
         
         _ptr = avio_alloc_context(buffer, bufferSize, 0, _ptr, // ctx itself as opaque? can cause issues as normally expects URLContext* there? any reason to set this?
-            CanRead  ? ReadPacketDlgt   : null, 
-            CanWrite ? WritePacketDlgt  : null, 
-            CanSeek  ? SeekDlgt         : null);
+            CanRead  ? ReadPacketDlgt   : null!, 
+            CanWrite ? WritePacketDlgt  : null!, 
+            CanSeek  ? SeekDlgt         : null!);
     }
 
     int ReadPacket(void* opaque, byte* buffer, int length)

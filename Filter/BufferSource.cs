@@ -19,13 +19,13 @@ public unsafe abstract class BufferSource : FilterContext
     protected FFmpegResult SetParameters(BufferSourceParams param)
         => new(av_buffersrc_parameters_set(_ptr, param)); // FFmpeg stack only usage, should be free by us
 
-    public FFmpegResult SendFrame(AVFrame* frame, AVBuffersrcFlag flags = AVBuffersrcFlag.None)
+    public FFmpegResult SendFrame(AVFrame* frame, AVBuffersrcFlags flags = AVBuffersrcFlags.None)
         => new(av_buffersrc_add_frame_flags(_ptr, frame, flags));
 
     public FFmpegResult Drain()
-        => new(av_buffersrc_add_frame_flags(_ptr, null, AVBuffersrcFlag.None));
+        => new(av_buffersrc_add_frame_flags(_ptr, null, AVBuffersrcFlags.None));
 
-    public FFmpegResult Close(long pts, AVBuffersrcFlag flags = AVBuffersrcFlag.None)
+    public FFmpegResult Close(long pts, AVBuffersrcFlags flags = AVBuffersrcFlags.None)
         => new(av_buffersrc_close(_ptr, pts, flags));
 }
 
@@ -38,7 +38,7 @@ public unsafe class AudioBufferSource : BufferSource
     public FFmpegResult SetParameters(AudioBufferSourceParams param)
        => base.SetParameters(param);
 
-    public FFmpegResult SendFrame(AudioFrame frame, AVBuffersrcFlag flags = AVBuffersrcFlag.None)
+    public FFmpegResult SendFrame(AudioFrame frame, AVBuffersrcFlags flags = AVBuffersrcFlags.None)
         => new(av_buffersrc_add_frame_flags(_ptr, frame, flags));
 
     // maybe add gets?
@@ -56,6 +56,6 @@ public unsafe class VideoBufferSource : BufferSource
     public FFmpegResult SetParameters(VideoBufferSourceParams param)
        => base.SetParameters(param);
 
-    public FFmpegResult SendFrame(VideoFrame frame, AVBuffersrcFlag flags = AVBuffersrcFlag.None)
+    public FFmpegResult SendFrame(VideoFrame frame, AVBuffersrcFlags flags = AVBuffersrcFlags.None)
         => new(av_buffersrc_add_frame_flags(_ptr, frame, flags)); // NOTE: write_frame is equivalent with KeepRef
 }

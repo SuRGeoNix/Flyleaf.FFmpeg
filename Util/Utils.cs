@@ -73,7 +73,7 @@ public unsafe static partial class Utils
         }
     }
     public static string GetName(AVAlphaMode alphaMode)
-        => av_alpha_mode_name(alphaMode);
+        => av_alpha_mode_name_str(alphaMode)!;
 
     public static List<T> GetFlagsAsList<T>(T value) where T : Enum
     {

@@ -4,7 +4,7 @@ public unsafe class FilterContext
 {
     // RW?
     public int                  HWExtraFrames       { get => _ptr->extra_hw_frames; set => _ptr->extra_hw_frames = value; }
-    public HWDeviceContextBase? HWDeviceContext     { get => _ptr->hw_device_ctx == null ? null : new HWDeviceContextView(_ptr->hw_device_ctx); set { if (_ptr->hw_device_ctx != null || value == null) return; if (!Filter.Flags.HasFlag(FilterFlags.Hwdevice)) throw new Exception("Filter does not support hw device"); _ptr->hw_device_ctx = value.RefRaw(); } } // no owner / don't overwrite (force only after getformat)
+    public HWDeviceContextBase? HWDeviceContext     { get => _ptr->hw_device_ctx == null ? null : new HWDeviceContextView(_ptr->hw_device_ctx); set { if (_ptr->hw_device_ctx != null || value == null) return; if (!Filter.Flags.HasFlag(FilterFlags.HWDEVICE)) throw new Exception("Filter does not support hw device"); _ptr->hw_device_ctx = value.RefRaw(); } } // no owner / don't overwrite (force only after getformat)
     public FilterThreadFlags    ThreadFlags         { get => _ptr->thread_type;     set => _ptr->thread_type = value; }
     public int                  Threads             { get => _ptr->nb_threads;      set => _ptr->nb_threads = value; }
 
@@ -62,9 +62,8 @@ public unsafe class FilterContext
             _ptr = existingCtx;
         else if (initialize)
         {
-            fixed(AVFilterContext** ptrPtr = &_ptr)
-                if (avfilter_graph_create_filter(ptrPtr, Filter, name, args, null, graph) < 0)
-                    throw new Exception($"Filter {filter.Name} creation failed");
+            if (avfilter_graph_create_filter(ref _ptr, Filter, name!, args!, null, graph) < 0)
+                throw new Exception($"Filter {filter.Name} creation failed");
         }
         else if ((_ptr = avfilter_graph_alloc_filter(graph, Filter, name)) == null)
                 throw new Exception($"Filter {filter.Name} allocation failed");

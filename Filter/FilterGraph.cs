@@ -44,9 +44,9 @@ public unsafe class FilterGraph : IDisposable
         FFmpegResult ret;
 
         if (!useParse2)
-            ret = new(avfilter_graph_parse_ptr(_ptr, filters, &inputs, &outputs, null));
+            ret = new(avfilter_graph_parse_ptr(_ptr, filters, ref inputs, ref outputs, null));
         else
-            ret = new(avfilter_graph_parse2(_ptr, filters, &inputs, &outputs));
+            ret = new(avfilter_graph_parse2(_ptr, filters, ref inputs, ref outputs));
 
         if (ret.Failed)
         {
@@ -195,16 +195,22 @@ public unsafe class FilterGraph : IDisposable
         filters.Add(filter);
     }
 
-    // TBR: required to reconstruct the graph after config
-    public static int AVFILTERPAD_SIZE = Unsafe.SizeOf<AVFilterPad>();
     FilterPadIn? FindInPadFromPtrs(AVFilterContext* ctx, AVFilterPad* pad)
     {
         if (!filterCtxPtrToIndex.TryGetValue((nint)ctx, out int filterIndex))
             return null;
 
         var filter = filters[filterIndex];
-        var padIndex  = (int)(((nint)pad - (nint)filter._ptr->input_pads) / AVFILTERPAD_SIZE);
-        return padIndex < 0 || padIndex > filter.InPads.Count - 1 ? null : filter.InPads[padIndex];
+
+        for (int i = 0; i < ctx->nb_inputs && i < filter.InPads.Count; i++)
+        {
+            var link = ctx->inputs[i];
+
+            if (link != null && link->dstpad == pad)
+                return filter.InPads[i];
+        }
+
+        return null;
     }
 
     FilterPadOut? FindOutPadFromPtrs(AVFilterContext* ctx, AVFilterPad* pad)
@@ -213,8 +219,16 @@ public unsafe class FilterGraph : IDisposable
             return null;
 
         var filter = filters[filterIndex];
-        var padIndex  = (int)(((nint)pad - (nint)filter._ptr->output_pads) / AVFILTERPAD_SIZE);
-        return padIndex < 0 || padIndex > filter.OutPads.Count - 1 ? null : filter.OutPads[padIndex];
+
+        for (int i = 0; i < ctx->nb_outputs && i < filter.OutPads.Count; i++)
+        {
+            var link = ctx->outputs[i];
+
+            if (link != null && link->srcpad == pad)
+                return filter.OutPads[i];
+        }
+
+        return null;
     }
 
     #region Disposal

@@ -31,7 +31,7 @@ public unsafe static partial class Utils
         AVDictionary* avdict = null;
 
         foreach(var kv in dict)
-            _ = av_dict_set(&avdict, kv.Key, kv.Value, 0);
+            _ = av_dict_set(ref avdict, kv.Key, kv.Value, 0);
 
         return avdict;
     }

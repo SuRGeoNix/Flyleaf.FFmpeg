@@ -30,13 +30,14 @@ public unsafe sealed partial class FilterSpec
         InPads  = new(inpads);
         OutPads = new(outpads);
 
-        FFFilter* fffilter = ((FFFilter*)filter); // nb_ private why?
+        int nbInputs  = (int)avfilter_filter_pad_count(filter, 0);
+        int nbOutputs = (int)avfilter_filter_pad_count(filter, 1);
 
-        for(int i = 0; i < fffilter->nb_inputs; i++)
-            inpads.Add(new(&filter->inputs[i], i));
+        for (int i = 0; i < nbInputs; i++)
+            inpads.Add(new(filter->inputs, i));
 
-        for(int i = 0; i < fffilter->nb_outputs; i++)
-            outpads.Add(new(&filter->outputs[i], i));
+        for (int i = 0; i < nbOutputs; i++)
+            outpads.Add(new(filter->outputs, i));
     }
 
     public string TestDump()
@@ -59,9 +60,8 @@ public unsafe sealed partial class FilterSpec
 
     public unsafe class FilterPadSpec
     {
-        public string?          Name        => GetString(_ptr->name);   // avfilter_pad_get_name(_ptr, index);
-        public AVMediaType      Type        => _ptr->type;              // avfilter_pad_get_type(_ptr, index);
-        public FilterPadFlags   Flags       => _ptr->flags;
+        public string?          Name        => avfilter_pad_get_name_str(_ptr, index);
+        public AVMediaType      Type        => avfilter_pad_get_type(_ptr, index);
         public int              Index       => index;
         int index;
 

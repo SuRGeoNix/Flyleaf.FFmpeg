@@ -43,10 +43,10 @@ public unsafe class HWFramesConstraints
     void FillMissing(AVHWDeviceType type) // NOTE: av_hwdevice_get_hwframe_constraints supposely check for supported for the specific device/adapter while here we just return all supported***
     {
         MaxWidth = MaxHeight = int.MaxValue;
-        if (type == AVHWDeviceType.Dxva2)
+        if (type == AVHWDeviceType.DXVA2)
         {
-            HWFormats.Add(AVPixelFormat.Dxva2Vld);
-            SWFormats = [AVPixelFormat.Nv12, AV_PIX_FMT_P010, AVPixelFormat.Vuyx, AVPixelFormat.Yuyv422, AV_PIX_FMT_Y210, AV_PIX_FMT_XV30, AV_PIX_FMT_P012, AV_PIX_FMT_Y212, AV_PIX_FMT_XV36, AVPixelFormat.Pal8, AVPixelFormat.Bgra];
+            HWFormats.Add(AVPixelFormat.DXVA2Vld);
+            SWFormats = [AVPixelFormat.NV12, AVPixelFormat.P010le, AVPixelFormat.Vuyx, AVPixelFormat.Yuyv422, AVPixelFormat.Y210le, AVPixelFormat.Xv30le, AVPixelFormat.P012le, AVPixelFormat.Y212le, AVPixelFormat.Xv36le, AVPixelFormat.Pal8, AVPixelFormat.BGRA];
         }
     }
 

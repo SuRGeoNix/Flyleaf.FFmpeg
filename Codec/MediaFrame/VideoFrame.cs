@@ -112,7 +112,7 @@ public unsafe sealed class VideoFrame : Frame
     public FFmpegResult TransferTo(VideoFrame frame) // Consider CopyPropertiesTo on success?
         => new(av_hwframe_transfer_data(frame, this, 0)); // flags unused
 
-    public FFmpegResult Map(VideoFrame frame, AVHWframeMap flags = AVHWframeMap.None) // Consider CopyPropertiesTo / or w/h only on success?
+    public FFmpegResult Map(VideoFrame frame, AVHWFrameMap flags = AVHWFrameMap.None) // Consider CopyPropertiesTo / or w/h only on success?
         => new(av_hwframe_map(frame._ptr, _ptr, flags));
 
     public byte[] ToRawImage(int align = 1)

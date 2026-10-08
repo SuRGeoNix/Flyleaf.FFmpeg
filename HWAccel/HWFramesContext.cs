@@ -115,7 +115,7 @@ public unsafe class DXVA2FramesContext : HWFramesContext
     
     public new readonly AVDXVA2FramesContext* _hwctx;
 
-    public DXVA2FramesContext(VideoDecoder decoder, DXVA2DeviceContext device) : base(decoder, device, AVPixelFormat.Dxva2Vld)
+    public DXVA2FramesContext(VideoDecoder decoder, DXVA2DeviceContext device) : base(decoder, device, AVPixelFormat.DXVA2Vld)
         => _hwctx = (AVDXVA2FramesContext*)_ctx->hwctx;
 }
 
@@ -128,7 +128,7 @@ public unsafe class D3D11VAFramesContext : HWFramesContext
 
     public new readonly AVD3D11VAFramesContext* _hwctx;
 
-    public D3D11VAFramesContext(VideoDecoder decoder, D3D11VADeviceContext device) : base(decoder, device, AVPixelFormat.D3d11)
+    public D3D11VAFramesContext(VideoDecoder decoder, D3D11VADeviceContext device) : base(decoder, device, AVPixelFormat.D3D11)
         => _hwctx = (AVD3D11VAFramesContext*)_ctx->hwctx;
 }
 
@@ -142,6 +142,6 @@ public unsafe class D3D12VAFramesContext : HWFramesContext
 
     public new readonly AVD3D12VAFramesContext* _hwctx;
 
-    public D3D12VAFramesContext(VideoDecoder decoder, D3D12VADeviceContext device) : base(decoder, device, AVPixelFormat.D3d12)
+    public D3D12VAFramesContext(VideoDecoder decoder, D3D12VADeviceContext device) : base(decoder, device, AVPixelFormat.D3D12)
         => _hwctx = (AVD3D12VAFramesContext*)_ctx->hwctx;
 }

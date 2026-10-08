@@ -4,7 +4,7 @@ public unsafe sealed partial class CodecProfile
 {
     public static string GetProfileName(List<CodecProfile> profiles, int profile)
     {
-        if (profile != AV_PROFILE_UNKNOWN)
+        if (profile != (int)Profiles.Unknown)
             foreach(var cprofile in profiles)
                 if (cprofile.Profile == profile)
                     return cprofile.Name;
@@ -17,7 +17,7 @@ public unsafe sealed partial class CodecProfile
 
     public static CodecProfile GetProfile(List<CodecProfile> profiles, int profile)
     {
-        if (profile != AV_PROFILE_UNKNOWN)
+        if (profile != (int)Profiles.Unknown)
             foreach(var cprofile in profiles)
                 if (cprofile.Profile == profile)
                     return cprofile;
@@ -29,5 +29,5 @@ public unsafe sealed partial class CodecProfile
         => ProfilesByPtr.TryGetValue((nint)input, out var cache) ? cache : new(input);
 
     public static Dictionary<nint, CodecProfile> ProfilesByPtr = [];
-    public static readonly CodecProfile PROFILE_UNKNOWN = new("Unknown", AV_PROFILE_UNKNOWN);
+    public static readonly CodecProfile PROFILE_UNKNOWN = new("Unknown", (int)Profiles.Unknown);
 }

@@ -9,7 +9,7 @@ public unsafe class StreamGroupMux
     public string?                      MetadataGet(string key, DictReadFlags flags = DictReadFlags.None)
                                                         { var val = av_dict_get(_ptr->metadata, key, null, flags); return val != null ? GetString(val->value) : null; }
     public int                          MetadataSet(string key, string value, DictWriteFlags flags = DictWriteFlags.None)
-                                                        => av_dict_set(&_ptr->metadata, key, value, flags);
+                                                        => av_dict_set(ref _ptr->metadata, key, value, flags);
     public AVStreamGroup_params         Params          => _ptr->@params; // structs incomplete (tbr)
     public AVStreamGroupParamsType      Type            => _ptr->type;
 

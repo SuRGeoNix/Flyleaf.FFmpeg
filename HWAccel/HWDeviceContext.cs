@@ -20,7 +20,7 @@ public unsafe abstract class HWDeviceContextBase
     // av_hwdevice_iterate_types (this only test the compilation config)
     public FFmpegClass          AVClass             => FFmpegClass.Get(_ctx)!;
     public AVHWDeviceType       Type                => _ctx->type;
-    public string               Name                => av_hwdevice_get_type_name(Type);
+    public string               Name                => av_hwdevice_get_type_name_str(Type)!;
     public HWFramesConstraints? HWFramesConstraints => HWFramesConstraints.Get(this);
 
     public bool                 Disposed            => _ptr == null;
@@ -50,7 +50,7 @@ public unsafe abstract class HWDeviceContextBase
     protected HWDeviceContextBase(AVHWDeviceType type, string? adapterId, Dictionary<string, string>? opts = null) // (decoding only?) how to separate alloc with create in constructor?
     {
         var avopts  = AVDictFromDict(opts);
-        var ret     = new FFmpegResult(av_hwdevice_ctx_create(ref _ptr, type, adapterId, avopts, 0));
+        var ret     = new FFmpegResult(av_hwdevice_ctx_create(ref _ptr, type, adapterId!, avopts, 0));
         if (avopts != null)
             AVDictFree(&avopts);
 
@@ -125,13 +125,13 @@ public unsafe class DXVA2DeviceContext : HWDeviceContext
 
     public new readonly AVDXVA2DeviceContext* _hwctx;
 
-    public DXVA2DeviceContext(nint device) : base(AVHWDeviceType.Dxva2)
+    public DXVA2DeviceContext(nint device) : base(AVHWDeviceType.DXVA2)
     {
         _hwctx          = (AVDXVA2DeviceContext*)_ctx->hwctx;
         _hwctx->devmgr  = (IDirect3DDeviceManager9*) device;
     }
 
-    public DXVA2DeviceContext(string? adapterId = null, Dictionary<string, string>? opts = null) : base(AVHWDeviceType.Dxva2, adapterId, opts)
+    public DXVA2DeviceContext(string? adapterId = null, Dictionary<string, string>? opts = null) : base(AVHWDeviceType.DXVA2, adapterId, opts)
         => _hwctx = (AVDXVA2DeviceContext*)_ctx->hwctx;
 }
 
@@ -146,13 +146,13 @@ public unsafe class D3D11VADeviceContext : HWDeviceContext
 
     public new readonly AVD3D11VADeviceContext* _hwctx;
 
-    public D3D11VADeviceContext(nint device) : base(AVHWDeviceType.D3d11va)
+    public D3D11VADeviceContext(nint device) : base(AVHWDeviceType.D3D11VA)
     {
         _hwctx          = (AVD3D11VADeviceContext*)_ctx->hwctx;
         _hwctx->device  = (ID3D11Device*) device;
     }
 
-    public D3D11VADeviceContext(string? adapterId = null, Dictionary<string, string>? opts = null) : base(AVHWDeviceType.D3d11va, adapterId, opts)
+    public D3D11VADeviceContext(string? adapterId = null, Dictionary<string, string>? opts = null) : base(AVHWDeviceType.D3D11VA, adapterId, opts)
         => _hwctx = (AVD3D11VADeviceContext*)_ctx->hwctx;
 }
 
@@ -167,25 +167,25 @@ public unsafe class D3D12VADeviceContext : HWDeviceContext
 
     public new readonly AVD3D12VADeviceContext* _hwctx;
 
-    public D3D12VADeviceContext(nint device) : base(AVHWDeviceType.D3d12va)
+    public D3D12VADeviceContext(nint device) : base(AVHWDeviceType.D3D12VA)
     {
         _hwctx          = (AVD3D12VADeviceContext*)_ctx->hwctx;
         _hwctx->device  = (ID3D12Device*) device;
     }
 
-    public D3D12VADeviceContext(string? adapterId = null, Dictionary<string, string>? opts = null) : base(AVHWDeviceType.D3d12va, adapterId, opts)
+    public D3D12VADeviceContext(string? adapterId = null, Dictionary<string, string>? opts = null) : base(AVHWDeviceType.D3D12VA, adapterId, opts)
         => _hwctx = (AVD3D12VADeviceContext*)_ctx->hwctx;
 }
 
 public unsafe class OpenClDeviceContext : HWDeviceContext
 {
-    public int  DeviceId            => _hwctx->device_id;
-    public int  Context             => _hwctx->context;
-    public int  CommandQueue        => _hwctx->command_queue;
+    public _cl_device_id*       DeviceId            => _hwctx->device_id;
+    public _cl_context*         Context             => _hwctx->context;
+    public _cl_command_queue*   CommandQueue        => _hwctx->command_queue;
     
     public new readonly AVOpenCLDeviceContext* _hwctx;
 
-    public OpenClDeviceContext(int deviceId) : base(AVHWDeviceType.Opencl) // caller should add ref to device?
+    public OpenClDeviceContext(_cl_device_id* deviceId) : base(AVHWDeviceType.Opencl) // caller should add ref to device?
     {
         _hwctx              = (AVOpenCLDeviceContext*)_ctx->hwctx;
         _hwctx->device_id   = deviceId;

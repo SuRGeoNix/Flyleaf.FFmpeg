@@ -156,9 +156,9 @@ public unsafe sealed class Packet : PacketFrame
         if (_ptr->side_data_elems > 0)
         {
             for (int i = 0; i < _ptr->side_data_elems - 1; i++)
-                sideData += av_packet_side_data_name(_ptr->side_data[i].type) + "|";
+                sideData += av_packet_side_data_name_str(_ptr->side_data[i].type) + "|";
 
-            sideData += av_packet_side_data_name(_ptr->side_data[_ptr->side_data_elems - 1].type);
+            sideData += av_packet_side_data_name_str(_ptr->side_data[_ptr->side_data_elems - 1].type);
         }
 
         string? flags = _ptr->flags != 0 ? GetFlagsAsString(_ptr->flags, "|") : null;

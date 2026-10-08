@@ -57,7 +57,7 @@ public unsafe partial class IOContext : IDisposable
     string? mimeType;
 
     // Can be parsed to format context directly*
-    internal AVIOInterruptCB_callback? InterruptDlgt;
+    internal AVIOInterruptCB.Callback? InterruptDlgt;
     internal AVIOInterruptCB int_cb; 
 
     public IOContext(AVIOContext* ptr, bool owner = false)
@@ -71,7 +71,7 @@ public unsafe partial class IOContext : IDisposable
 #pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
     }
 
-    public IOContext(string url, IOFlags flags = IOFlags.Read, AVIOInterruptCB_callback? interruptClbk = null, void* interruptClbkOpaque = null, Dictionary<string, string>? opts = null)
+    public IOContext(string url, IOFlags flags = IOFlags.Read, AVIOInterruptCB.Callback? interruptClbk = null, void* interruptClbkOpaque = null, Dictionary<string, string>? opts = null)
     {
         Url = url;
 
@@ -85,8 +85,7 @@ public unsafe partial class IOContext : IDisposable
         var avopts = AVDictFromDict(opts);
 
         fixed (AVIOInterruptCB* interruptPtr = &int_cb)
-            fixed (AVIOContext** ctxPtr = &_ptr)
-                new FFmpegResult(avio_open2(ctxPtr, url, flags, interruptPtr, avopts != null ? &avopts : null)).ThrowOnFailure();
+            new FFmpegResult(avio_open2(ref _ptr, url, flags, interruptPtr, ref avopts)).ThrowOnFailure();
 
         // TBR: Access IOContext->url protocol directly* | FFIOContext->opaque https://ffmpeg.org/doxygen/trunk/aviobuf_8c_source.html#l00050
         Protocol = GetUrlProtocol(url);

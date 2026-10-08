@@ -64,14 +64,14 @@ public class LogHandler
                 if (Log.config.LogLevel >= LogLevel.Error)
                 {
                     CanError = true;
-                    if (Log.config.LogLevel >= LogLevel.Warn)
+                    if (Log.config.LogLevel >= LogLevel.Warning)
                     {
                         CanWarn = true;
 
                         if (Log.config.LogLevel >= LogLevel.Info)
                         {
                             CanInfo = true;
-                            if (Log.config.LogLevel >= LogLevel.Verb)
+                            if (Log.config.LogLevel >= LogLevel.Verbose)
                             {
                                 CanVerb = true;
                                 if (Log.config.LogLevel >= LogLevel.Debug)
@@ -80,7 +80,7 @@ public class LogHandler
                                     if (Log.config.LogLevel >= LogLevel.Trace)
                                     {
                                         CanTrace = true;
-                                        if (Log.config.LogLevel >= LogLevel.Max)
+                                        if (Log.config.LogLevel >= LogLevel.MaxOffset)
                                         {
                                             CanMax = true;
                                         }
@@ -117,24 +117,24 @@ public class LogHandler
 
     public void Fatal(string msg)   { if (CanFatal) Log.WriteLineN($"{Prefix}{msg}", LogLevel.Fatal); }
     public void Error(string msg)   { if (CanError) Log.WriteLineN($"{Prefix}{msg}", LogLevel.Error); }
-    public void Warn (string msg)   { if (CanWarn)  Log.WriteLineN($"{Prefix}{msg}", LogLevel.Warn);  }
+    public void Warn (string msg)   { if (CanWarn)  Log.WriteLineN($"{Prefix}{msg}", LogLevel.Warning);  }
     public void Info (string msg)   { if (CanInfo)  Log.WriteLineN($"{Prefix}{msg}", LogLevel.Info);  }
-    public void Verb (string msg)   { if (CanVerb)  Log.WriteLineN($"{Prefix}{msg}", LogLevel.Verb);  }
+    public void Verb (string msg)   { if (CanVerb)  Log.WriteLineN($"{Prefix}{msg}", LogLevel.Verbose);  }
     public void Debug(string msg)   { if (CanDebug) Log.WriteLineN($"{Prefix}{msg}", LogLevel.Debug); }
     public void Trace(string msg)   { if (CanTrace) Log.WriteLineN($"{Prefix}{msg}", LogLevel.Trace); }
-    public void Max  (string msg)   { if (CanTrace) Log.WriteLineN($"{Prefix}{msg}", LogLevel.Max); }
+    public void Max  (string msg)   { if (CanTrace) Log.WriteLineN($"{Prefix}{msg}", LogLevel.MaxOffset); }
     public void Level(string msg, LogLevel level)
                                     { if (included) Log.WriteLine($"{Prefix}{msg}", level); }
 
     // Use those if you manually check for Can<Level> to avoid string allocation
     public void FatalN(string msg)  => Log.WriteLineN($"{Prefix}{msg}", LogLevel.Fatal);
     public void ErrorN(string msg)  => Log.WriteLineN($"{Prefix}{msg}", LogLevel.Error);
-    public void WarnN (string msg)  => Log.WriteLineN($"{Prefix}{msg}", LogLevel.Warn);
+    public void WarnN (string msg)  => Log.WriteLineN($"{Prefix}{msg}", LogLevel.Warning);
     public void InfoN (string msg)  => Log.WriteLineN($"{Prefix}{msg}", LogLevel.Info);
-    public void VerbN (string msg)  => Log.WriteLineN($"{Prefix}{msg}", LogLevel.Verb);
+    public void VerbN (string msg)  => Log.WriteLineN($"{Prefix}{msg}", LogLevel.Verbose);
     public void DebugN(string msg)  => Log.WriteLineN($"{Prefix}{msg}", LogLevel.Debug);
     public void TraceN(string msg)  => Log.WriteLineN($"{Prefix}{msg}", LogLevel.Trace);
-    public void MaxN  (string msg)  => Log.WriteLineN($"{Prefix}{msg}", LogLevel.Max);
+    public void MaxN  (string msg)  => Log.WriteLineN($"{Prefix}{msg}", LogLevel.MaxOffset);
     public void LevelN(string msg, LogLevel level)
                                     => Log.WriteLineN($"{Prefix}{msg}", level);
 }

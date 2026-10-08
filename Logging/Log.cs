@@ -215,12 +215,12 @@ public unsafe static class Log
                     AVClass** parent = *(AVClass ***) (((byte*) avcl) + avc->parent_log_context_offset);
                     if (parent != null && *parent != null)  
                     {
-                        var ItemNameP = Marshal.GetDelegateForFunctionPointer<AVClass_item_name>((*parent)->item_name.Pointer);
-                        parentClassName = $"[{ItemNameP(parent)}] ";
+                        var ItemNameP = Marshal.GetDelegateForFunctionPointer<AVClass.ItemName>((*parent)->item_name.Pointer);
+                        parentClassName = $"[{GetString(ItemNameP(parent))}] ";
                     }
                 }
-                var ItemName = Marshal.GetDelegateForFunctionPointer<AVClass_item_name>(avc->item_name.Pointer);
-                className = $"[{ItemName(avcl)}] ";
+                var ItemName = Marshal.GetDelegateForFunctionPointer<AVClass.ItemName>(avc->item_name.Pointer);
+                className = $"[{GetString(ItemName(avcl))}] ";
             }
         }
 

@@ -77,9 +77,9 @@ public unsafe class VideoDecoder : AVDecoder
     public HWFramesContextBase? HWFramesContext         { get => _ptr->hw_frames_ctx == null ? null : new HWFramesContextView(_ptr->hw_frames_ctx); set { if (_ptr->hw_frames_ctx != null || value == null) return; _ptr->hw_frames_ctx = value.RefRaw(); } } // no owner / don't overwrite (force only after getformat)
 
     public AVPixelFormat GetFormatDefault(AVPixelFormat* fmt) => avcodec_default_get_format(_ptr, fmt);
-    AVCodecContext_get_format?  GetFormatDlgt;
+    AVCodecContext.GetFormat?  GetFormatDlgt;
 
-    public VideoDecoder(VideoDecoderSpec codec, VideoStream? stream = null, AVCodecContext_get_format? getFormatClbk = null, AVCodecContext_get_buffer2? getBufferClbk = null) : base(codec, getBufferClbk)
+    public VideoDecoder(VideoDecoderSpec codec, VideoStream? stream = null, AVCodecContext.GetFormat? getFormatClbk = null, AVCodecContext.GetBuffer2? getBufferClbk = null) : base(codec, getBufferClbk)
     {
         CodecSpec = codec;
 

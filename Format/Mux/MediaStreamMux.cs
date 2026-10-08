@@ -11,7 +11,7 @@ public unsafe abstract class MediaStreamMux
     public string?              MetadataGet(string key, DictReadFlags flags = DictReadFlags.None)
                                                     { var val = av_dict_get(_ptr->metadata, key, null, flags); return val != null ? GetString(val->value) : null; }
     public int                  MetadataSet(string key, string value, DictWriteFlags flags = DictWriteFlags.None)
-                                                    => av_dict_set(&_ptr->metadata, key, value, flags);
+                                                    => av_dict_set(ref _ptr->metadata, key, value, flags);
 
     public long                 StartTime           { get => _ptr->start_time;                  set => _ptr->start_time = value; }
     public AVRational           Timebase            { get => _ptr->time_base;                   set => _ptr->time_base = value; }

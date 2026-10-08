@@ -14,15 +14,15 @@ public static class HWDeviceSpec
         [AVHWDeviceType.Vdpau]          = AVPixelFormat.Vdpau,
         [AVHWDeviceType.Cuda]           = AVPixelFormat.Cuda,
         [AVHWDeviceType.Vaapi]          = AVPixelFormat.Vaapi,
-        [AVHWDeviceType.Dxva2]          = AVPixelFormat.Dxva2Vld,
+        [AVHWDeviceType.DXVA2]          = AVPixelFormat.DXVA2Vld,
         [AVHWDeviceType.Qsv]            = AVPixelFormat.Qsv,
         [AVHWDeviceType.Videotoolbox]   = AVPixelFormat.Videotoolbox,
-        [AVHWDeviceType.D3d11va]        = AVPixelFormat.D3d11,
+        [AVHWDeviceType.D3D11VA]        = AVPixelFormat.D3D11,
         [AVHWDeviceType.Drm]            = AVPixelFormat.DrmPrime,
         [AVHWDeviceType.Opencl]         = AVPixelFormat.Opencl,
         [AVHWDeviceType.Mediacodec]     = AVPixelFormat.Mediacodec,
         [AVHWDeviceType.Vulkan]         = AVPixelFormat.Vulkan,
-        [AVHWDeviceType.D3d12va]        = AVPixelFormat.D3d12,
+        [AVHWDeviceType.D3D12VA]        = AVPixelFormat.D3D12,
         [AVHWDeviceType.Amf]            = AVPixelFormat.AmfSurface,
         [AVHWDeviceType.Ohcodec]        = AVPixelFormat.Ohcodec
     };

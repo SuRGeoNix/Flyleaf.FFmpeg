@@ -118,7 +118,7 @@ public unsafe static class ArrayUtils
         if (profile != null)
         {
             int i = 0;
-            while (profile[i].profile != AV_PROFILE_UNKNOWN)
+            while (profile[i].profile != (int)Profiles.Unknown)
                 list.Add(GetProfile(&profile[i++]));
         }
 
@@ -139,17 +139,17 @@ public unsafe static class ArrayUtils
         return list;
     }
 
-    public static List<AVCodecTag> GetTags(AVCodecTag** tags)
+    public static List<CodecTag> GetTags(AVCodecTag** tags)
     {
-        List<AVCodecTag> list = [];
+        List<CodecTag> list = [];
         
         if (tags != null)
         {
             nint cur = (nint)(*tags);
-            while (((AVCodecTag*)cur)->id != AVCodecID.None)
+            while (((CodecTag*)cur)->id != AVCodecID.None)
             {
-                list.Add(*(AVCodecTag*)cur);
-                cur += sizeof(AVCodecTag);
+                list.Add(*(CodecTag*)cur);
+                cur += sizeof(CodecTag);
             }
         }
 

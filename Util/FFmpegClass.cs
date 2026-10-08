@@ -41,7 +41,7 @@ public unsafe class FFmpegClass : FFmpegClassSpec
         if (@class->child_next.Pointer == 0)
             return null;
 
-        var ChildNext = Marshal.GetDelegateForFunctionPointer<AVClass_child_next>(@class->child_next.Pointer); // same as av_opt_child_next
+        var ChildNext = Marshal.GetDelegateForFunctionPointer<AVClass.ChildNext>(@class->child_next.Pointer); // same as av_opt_child_next
         void* childCtx;
         
         return 
@@ -55,7 +55,7 @@ public unsafe class FFmpegClass : FFmpegClassSpec
         if (@class->get_category.Pointer == 0)
             return AVClassCategory.Na;
 
-        var GetCategoryX = Marshal.GetDelegateForFunctionPointer<AVClass_get_category>(@class->get_category.Pointer);
+        var GetCategoryX = Marshal.GetDelegateForFunctionPointer<AVClass.GetCategory>(@class->get_category.Pointer);
         return GetCategoryX(ctx);
     }
 
@@ -85,8 +85,8 @@ public unsafe class FFmpegClass : FFmpegClassSpec
 
     public (FFmpegOption? option, FFmpegClass? optCtx) Find2(string name, string unit, OptFlags optFlags = default, OptSearchFlags searchFlags = OptSearchFlags.Children)
     {
-        void* obj;
-        AVOption* val = av_opt_find2(ctx, name, unit, optFlags, searchFlags, &obj);
+        void* obj = null;
+        AVOption* val = av_opt_find2(ctx, name, unit, optFlags, searchFlags, ref obj);
         return val == null ? (null, null) : (new(val), obj == ctx ? this : new(obj));
     }
 
@@ -94,7 +94,7 @@ public unsafe class FFmpegClass : FFmpegClassSpec
         => av_opt_set_defaults2(ctx, mask, flags);
 
     public FFmpegResult Set(string name, string? value, OptSearchFlags searchFlags = OptSearchFlags.Children)
-        => new(av_opt_set(ctx, name, value, searchFlags));
+        => new(av_opt_set(ctx, name, value!, searchFlags));
 
     public FFmpegResult Set(string name, long value, OptSearchFlags searchFlags = OptSearchFlags.Children)
         => new(av_opt_set_int(ctx, name, value, searchFlags));
@@ -145,8 +145,8 @@ public unsafe class FFmpegClass : FFmpegClassSpec
 
     public (FFmpegResult success, string? result) GetString(string name, OptSearchFlags searchFlags = OptSearchFlags.Children)
     {
-        byte* outVal;
-        FFmpegResult ret = new(av_opt_get(ctx, name, searchFlags, &outVal));
+        byte* outVal = null;
+        FFmpegResult ret = new(av_opt_get(ctx, name, searchFlags, ref outVal));
         return (ret, Utils.GetString(outVal));
     }
 
@@ -214,8 +214,8 @@ public unsafe class FFmpegClass : FFmpegClassSpec
 
     public (FFmpegResult success, Dictionary<string, string>? result) GetDictionary(string name, OptSearchFlags searchFlags = OptSearchFlags.Children)
     {
-        AVDictionary* dict;
-        FFmpegResult ret = new(av_opt_get_dict_val(ctx, name, searchFlags, & dict));
+        AVDictionary* dict = null;
+        FFmpegResult ret = new(av_opt_get_dict_val(ctx, name, searchFlags, ref dict));
         return (ret, AVDictToDict(dict));
     }
 }

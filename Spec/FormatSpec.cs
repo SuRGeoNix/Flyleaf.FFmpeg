@@ -2,6 +2,13 @@
 
 // NOTE: AV_CODEC_ID_FIRST_.... are dummy
 
+// AVCodecTag is private (TBR: Might worth exposing it in bindings)
+public struct CodecTag
+{
+    public AVCodecID id;
+    public uint tag;
+}
+
 public unsafe abstract class FormatSpec
 {
     public static DemuxerSpec?  FindDemuxerByName(string name)  => DemuxerByName.TryGetValue(name, out var fmt) ? fmt : null;
@@ -47,7 +54,7 @@ public unsafe abstract class FormatSpec
         }
     }
 
-    static void FillTags(FormatSpec fmtSpec, List<AVCodecTag> tags)
+    static void FillTags(FormatSpec fmtSpec, List<CodecTag> tags)
     {
         foreach(var tag in tags)
         {
@@ -65,7 +72,7 @@ public unsafe sealed class DemuxerSpec : FormatSpec
     public string[]?        Extensions          { get; }
     public string[]?        MimeType            { get; }
     public DemuxerSpecFlags Flags               { get; }
-    public List<AVCodecTag> CodecTags           { get; } // + AVSType, FourCC
+    public List<CodecTag>   CodecTags           { get; } // + AVSType, FourCC
 
     public readonly AVInputFormat* _ptr;
 
@@ -86,23 +93,23 @@ public unsafe sealed class DemuxerSpec : FormatSpec
 
     // TODO: Probe demuxers from FFInputFormat->read_probe directly* (maybe for NoFile only? before open|no data*)
 
-    public static Tuple<DemuxerSpec?, int> FindDemuxer(IOContext ctx, string? url = null, uint offset = 0, uint maxProbeSize = 0)
+    public static (DemuxerSpec? Demuxer, int Score) FindDemuxer(IOContext ctx, string? url = null, uint offset = 0, uint maxProbeSize = 0)
     {
-        AVInputFormat* fmt;
-        int probeScore = av_probe_input_buffer2(ctx, &fmt, url, ctx, offset, maxProbeSize); // logctx this? (ctx->priv/opaque for urlcontext or parent such as avformatcontext?)
+        AVInputFormat* fmt = null;
+        int score = av_probe_input_buffer2(ctx, ref fmt, url!, ctx, offset, maxProbeSize); // logctx this? (ctx->priv/opaque for urlcontext or parent such as avformatcontext?)
 
-        if (fmt == null)
-            return new(null, 0);
+        if (score < 0)
+            return (null, score);
 
-        return new(fmt == null ? null : (DemuxerSpec)FormatSpecByPtr[(nint)fmt], probeScore);
+        return new(fmt == null ? null : (DemuxerSpec)FormatSpecByPtr[(nint)fmt], score);
     }
 
-    public static Tuple<DemuxerSpec?, int> FindDemuxer(string? filename = null, string? mimeType = null, int is_opened = 1) // TODO: buf data?
+    public static (DemuxerSpec? Demuxer, int Score) FindDemuxer(string? filename = null, string? mimeType = null, int is_opened = 1) // TODO: buf data?
     {
         AVProbeData pd = new()
         {
-            filename    = av_strdup(filename),
-            mime_type   = av_strdup(mimeType)
+            filename    = av_strdup(filename!),
+            mime_type   = av_strdup(mimeType!)
         };
 
         int score;
@@ -124,7 +131,7 @@ public unsafe sealed class MuxerSpec : FormatSpec
     public string[]?        Extenstions         { get; }
     public string?          MimeType            { get; }
     public MuxerSpecFlags   Flags               { get; }
-    public List<AVCodecTag> CodecTags           { get; } // + AVSType, FourCC
+    public List<CodecTag>   CodecTags           { get; } // + AVSType, FourCC
     public AVCodecID        VideoEncoder        { get; }
     public AVCodecID        SubtitleEncoder     { get; }
     public AVCodecID        AudioEncoder        { get; }
@@ -196,7 +203,7 @@ public unsafe sealed class MuxerSpec : FormatSpec
     public static MuxerSpec? FindMuxer(string fileName, string? mimeType = null) // maybe provide also with mime only?
     {
         AVOutputFormat* fmt;
-        fmt = av_guess_format(null, fileName, mimeType);
+        fmt = av_guess_format(null!, fileName, mimeType!);
         
         return fmt == null ? null : (MuxerSpec)FormatSpecByPtr[(nint)fmt];
     }

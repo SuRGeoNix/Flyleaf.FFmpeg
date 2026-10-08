@@ -3,9 +3,9 @@
 public unsafe abstract class AVDecoder : Decoder
 {
     public int GetBufferDefault(AVFrame* frame, int flags) => avcodec_default_get_buffer2(_ptr, frame, flags);
-    AVCodecContext_get_buffer2? GetBuffer2Dlgt;
+    AVCodecContext.GetBuffer2? GetBuffer2Dlgt;
 
-    protected AVDecoder(AVCodec* codec, AVCodecContext_get_buffer2? getBufferClbk = null) : base(codec)
+    protected AVDecoder(AVCodec* codec, AVCodecContext.GetBuffer2? getBufferClbk = null) : base(codec)
     {
         if (getBufferClbk != null)
         {

@@ -61,7 +61,7 @@ public unsafe abstract class FormatContext : IDisposable
     }
 
     public void Dump(string? url = null, int inputId = 0)
-        => av_dump_format(_ptr, inputId, url, this is Muxer ? 1 : 0);
+        => av_dump_format(_ptr, inputId, url!, this is Muxer ? 1 : 0);
 
     #region Disposal
     ~FormatContext()

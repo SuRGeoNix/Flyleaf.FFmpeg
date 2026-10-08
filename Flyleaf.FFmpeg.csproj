@@ -11,13 +11,13 @@
 	<IsOSX Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
 	<IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
 	<Description>FFmpeg Bindings for C#/.NET (Extended)</Description>
-	<Version>9.0</Version>
+	<Version>9.0.1</Version>
 	<Authors>SuRGeoNix</Authors>
 	<Copyright>SuRGeoNix © 2026</Copyright>
 	<PackageTags>flyleaf;ffmpeg;bindings</PackageTags>
 	<Title>FFmpeg Bindings for C#/.NET (Extended)</Title>
 	<PackageReleaseNotes>
-		Updates to v9.0
+		Replaces Flyleaf.FFmpeg.Bindings with the new Flyleaf.FFmpeg.ABI
 	</PackageReleaseNotes>
 	<PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
   </PropertyGroup>
@@ -48,7 +48,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Flyleaf.FFmpeg.Bindings" Version="9.0.2-a1" />
+    <PackageReference Include="Flyleaf.FFmpeg.ABI" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>
